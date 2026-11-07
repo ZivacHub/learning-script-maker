@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block page_class %} page-wide{% endblock %}
+{% block page_transition %}{% endblock %}
+{% block content %}
+{% set base = '/predmet/%d/izvor/%d/stranica/' % (predmet_id, page.source.id) %}
+<p class="crumb"><a href="/predmet/{{ predmet_id }}">Predmet</a></p>
+<div class="page-head">
+  <h1>Ispravi tekst stranice</h1>
+  <p class="muted oe-where">{{ page.label }}, stranica {{ page.n }} od {{ page.pages }}</p>
+</div>
+
+{% if saved %}
+<p class="notice-line" role="status">
+  {% if changed or removed %}Spremljeno: {{ changed }} {{ hr_plural(changed, 'redak promijenjen', 'retka promijenjena', 'redaka promijenjeno') }}{% if removed %}, {{ removed }} {{ hr_plural(removed, 'obrisan', 'obrisana', 'obrisano') }}{% endif %}.{% else %}Spremljeno.{% endif %}
+  {% if page.checked %}Stranica je označena kao provjerena.{% endif %}
+</p>
+{% endif %}
+
+<p class="oe-tags">
+  {% if page.checked %}<span class="tag">Provjereno</span>{% else %}<span class="tag tag-warn">Nije provjereno</span>{% endif %}
+  {% if page.ai_draft %}<span class="tag tag-warn">Nacrt Geminija: provjeri svaki redak uz sliku</span>
+  {% elif page.handwritten %}<span class="tag tag-warn">Rukopis: računalo ga čita slabo</span>{% endif %}
+  {% if previous %}<a class="btn" href="{{ base }}{{ previous }}/ispravi">Prethodna stranica</a>{% endif %}
+  {% if next %}<a class="btn" href="{{ base }}{{ next }}/ispravi">Sljedeća stranica</a>{% endif %}
+</p>
+<p class="muted oe-help">Uz svaki redak vidiš dio slike s kojeg je pročitan. Ispravi riječi koje su krive; ne moraš ispraviti sve. Tekst koji ne ispraviš ostaje kakav jest i koristi se dalje. „Označi stranicu provjerenom” znači da si je pogledao i da ona više ne ide u „Za provjeru”.</p>
+
+<div class="oe">
+  <form class="oe-lines" method="post" action="{{ base }}{{ page.n }}/ispravi" id="oe-form">
+    {% if not page.lines %}
+    <div class="notice"><h2>Na ovoj stranici nema pročitanog teksta</h2><p>Računalo nije našlo nijedan redak. Ako na slici ima teksta, pretipkaj ga u pitanja ili gradivo ručno.</p></div>
+    {% endif %}
+    {% if page.lines and page.image_path and not page.lines|selectattr('has_crop')|list %}
+    <p class="muted oe-nocrop">Računalo je ovu stranicu pročitalo odjednom, pa nema slike za svaki redak. Gledaj sliku stranice uz tekst i povećaj je gumbom +.</p>
+    {% endif %}
+    <ol class="oe-list">
+      {% for line in page.lines %}
+      <li class="ln">
+        {% if line.has_crop %}
+        <div class="ln-crop"><img loading="lazy" src="{{ base }}{{ page.n }}/redak/{{ line.index }}" alt="Dio slike za redak {{ loop.index }}"></div>
+        {% endif %}
+        <div class="ln-edit">
+          <label class="field"><span class="visually-hidden">Redak {{ loop.index }}</span>
+            <textarea name="line-{{ line.index }}" rows="{{ [1 + (line.text|length // 60), 6]|min }}" data-autosize>{{ line.text }}</textarea></label>
+          <div class="ln-meta">
+            <span class="muted">redak {{ loop.index }}{% if line.confidence is not none %} · sigurnost čitanja {{ (line.confidence * 100)|round|int }} %{% endif %}</span>
+            {% if line.edited %}<span class="tag">Ispravio si</span>{% endif %}
+            <label class="check"><input type="checkbox" name="drop-{{ line.index }}"> Obriši redak</label>
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ol>
+    <div class="oe-actions">
+      <button class="btn btn-primary" type="submit" name="akcija" value="spremi">Spremi ispravke</button>
+      <button class="btn" type="submit" name="akcija" value="provjereno">Spremi i označi stranicu provjerenom</button>
+    </div>
+  </form>
+
+  <aside class="oe-picture rv-page" aria-label="Slika stranice">
+    {% if page.image_path %}
+    <div class="zoom-bar" role="group" aria-label="Povećanje slike">
+      <button class="btn" type="button" data-zoom="out" aria-label="Smanji sliku">−</button>
+      <button class="btn" type="button" data-zoom="fit">Cijela stranica</button>
+      <button class="btn" type="button" data-zoom="in" aria-label="Povećaj sliku">+</button>
+    </div>
+    <div class="zoom-box" tabindex="0" aria-label="Slika stranice, može se pomicati">
+      <img id="oe-img" src="/predmet/{{ predmet_id }}/stranica/{{ page.source.id }}/{{ page.n }}" alt="Stranica {{ page.n }} datoteke {{ page.label }}">
+    </div>
+    {% else %}
+    <p class="muted">Za ovu stranicu nema slike: tekst je uzet izravno iz datoteke.</p>
+    {% endif %}
+  </aside>
+</div>
+
+{% if page.is_question_list %}
+<form class="oe-make" method="post" action="{{ base }}{{ page.n }}/pitanja">
+  <h2>Pitanja iz ove stranice</h2>
+  <p class="muted">Najprije spremi ispravke. Zatim aplikacija iz ovog teksta ponovno izdvoji pitanja; ona koja si već uredio ili im odgovorio ostaju.</p>
+  <button class="btn btn-primary" type="submit">Napravi pitanja iz ove stranice</button>
+</form>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/ocr_edit.js" defer></script>
+{% endblock %}

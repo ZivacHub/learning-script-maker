@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "predmet": "Primjer matematika",
+  "title": "Formule i slike",
+  "subtitle": "Sintetički primjer: deset ispravnih formula, jedna neispravna i dvije slike.",
+  "lang": "hr",
+  "preferences": {
+    "template": "qa",
+    "theme": "papir"
+  },
+  "units": [
+    {
+      "id": "u1",
+      "no": 1,
+      "title": "Kompleksni brojevi",
+      "accent_index": 2,
+      "groups": [
+        {
+          "title": "a) Definicije",
+          "items": [
+            {
+              "id": "m1",
+              "no": 1,
+              "question": "Definirajte skup $\\mathbb{C}$.",
+              "status": "verbatim",
+              "answer_blocks": [
+                {
+                  "kind": "text",
+                  "text": "Skup kompleksnih brojeva je $\\mathbb{C} = \\{a + bi : a, b \\in \\mathbb{R}\\}$."
+                }
+              ],
+              "source": {
+                "file": "Materijali/skripta_primjer.pdf",
+                "page": 5,
+                "quote": "Skup kompleksnih brojeva"
+              }
+            },
+            {
+              "id": "m2",
+              "no": 2,
+              "question": "Odredite inverz kompleksnog broja.",
+              "status": "own",
+              "answer_blocks": [
+                {
+                  "kind": "formula",
+                  "text": "z^{-1} = \\frac{a - bi}{a^2 + b^2}"
+                },
+                {
+                  "kind": "text",
+                  "text": "Za $z = 1 - 2i$ dobije se $\\frac{1 - 2i}{3i}$."
+                }
+              ]
+            },
+            {
+              "id": "m3",
+              "no": 3,
+              "question": "Rotacija i modul",
+              "status": "verbatim",
+              "answer_blocks": [
+                {
+                  "kind": "formula",
+                  "text": "r_O^\\alpha \\circ r_O^\\alpha = r_O^{2\\alpha}"
+                },
+                {
+                  "kind": "list",
+                  "items": [
+                    "$|z| = \\sqrt{a^2 + b^2}$",
+                    "$\\overline{z} = a - bi$",
+                    "obični redak bez formule"
+                  ]
+                }
+              ],
+              "source": {
+                "file": "Materijali/skripta_primjer.pdf",
+                "page": 6,
+                "quote": "Rotacija je izometrija"
+              }
+            }
+          ]
+        },
+        {
+          "title": "b) Zbrajanje i kombinacije",
+          "items": [
+            {
+              "id": "m4",
+              "no": 4,
+              "question": "Zbroj prvih $n$ prirodnih brojeva",
+              "status": "own",
+              "answer_blocks": [
+                {
+                  "kind": "text",
+                  "text": "Vrijedi\n\n$$\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}$$\n\nza svaki prirodni broj."
+                },
+                {
+                  "kind": "hint",
+                  "caption": "Broj načina",
+                  "text": "Odabir $k$ od $n$ elemenata: $\\binom{n}{k}$."
+                }
+              ]
+            },
+            {
+              "id": "m5",
+              "no": 5,
+              "question": "Neispravno zapisana formula",
+              "status": "own",
+              "answer_blocks": [
+                {
+                  "kind": "formula",
+                  "text": "\\frac{1}{"
+                },
+                {
+                  "kind": "text",
+                  "text": "Cijena je \\$5 i \\$6, a $x$ ostaje formula."
+                }
+              ]
+            },
+            {
+              "id": "m7",
+              "no": 6,
+              "question": "Dugačka formula i dugačak redak kôda",
+              "status": "own",
+              "answer_blocks": [
+                {
+                  "kind": "formula",
+                  "text": "P(x) = a_{1} x^{1} + a_{2} x^{2} + a_{3} x^{3} + a_{4} x^{4} + a_{5} x^{5} + a_{6} x^{6} + a_{7} x^{7} + a_{8} x^{8} + a_{9} x^{9} + a_{10} x^{10} + a_{11} x^{11} + a_{12} x^{12} + a_{13} x^{13} + a_{14} x^{14} + a_{15} x^{15} + a_{16} x^{16} + a_{17} x^{17} + a_{18} x^{18}"
+                },
+                {
+                  "kind": "code",
+                  "caption": "Python",
+                  "text": "total = sum(coefficient * x ** power for power, coefficient in enumerate(coefficients, start=1) if coefficient != 0)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "u2",
+      "no": 2,
+      "title": "Izometrije",
+      "accent_index": 1,
+      "groups": [
+        {
+          "title": "Slike",
+          "items": [
+            {
+              "id": "m6",
+              "no": 1,
+              "question": "Osna simetrija na slici",
+              "status": "own",
+              "answer_blocks": [
+                {
+                  "kind": "figure",
+                  "figure_path": "figs/osna.png",
+                  "caption": "Os $p$ i točke $T$, $T'$",
+                  "origin": "skripta_primjer.pdf, str. 4"
+                },
+                {
+                  "kind": "figure",
+                  "figure_path": "figs/nema.png",
+                  "caption": "Slika koje nema",
+                  "origin": "skripta_primjer.pdf, str. 9"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

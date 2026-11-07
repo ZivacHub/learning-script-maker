@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "predmet": "Primjer predmet",
+  "exported_at": "2026-10-09T12:00:00+00:00",
+  "items": [
+    {"item_id": "u1q1", "passes_done": 0, "target_passes": 2, "updated_at": "2026-10-09T10:00:00+00:00"},
+    {"item_id": "u1q2", "passes_done": 1, "target_passes": 2, "last_pass_at": "2026-10-09T11:00:00+00:00", "difficulty": 4, "study_minutes": 6.5, "updated_at": "2026-10-09T11:00:00+00:00"},
+    {"item_id": "u1q4", "passes_done": 3, "target_passes": 3, "last_pass_at": "2026-10-09T11:30:00+00:00", "study_minutes": 20, "updated_at": "2026-10-09T11:30:00+00:00"}
+  ]
+}

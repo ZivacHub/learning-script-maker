@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% macro bar(done, target) %}
+{% set v = prog_vars(done, target) %}
+<div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="{{ target }}" aria-valuenow="{{ done }}"
+     aria-label="Naučeno {{ done }} od {{ target }} prolaza" data-state="{{ v.state }}"
+     style="--frac: {{ v.frac }}; --blend: {{ v.blend }};">
+  <span class="prog-track"><span class="prog-fill"></span><span class="prog-ticks" aria-hidden="true">{% for _ in range(target) %}<i></i>{% endfor %}</span></span>
+  <span class="prog-text">{{ done }}/{{ target }}</span>
+</div>
+{% endmacro %}
+
+{% macro tile(look, mode, name) %}
+<section class="tile" data-look="{{ look }}" data-theme="{{ mode }}" aria-labelledby="t-{{ look }}-{{ mode }}">
+  <h3 id="t-{{ look }}-{{ mode }}">{{ name }}</h3>
+  <p>Definicija je doslovno prepisana iz materijala, <a href="#t-{{ look }}-{{ mode }}">s poveznicom</a> na izvor. Formula: <span style="font-family: var(--font-math); font-style: italic;">|TN| = |T′N|</span></p>
+
+  <div class="swatches">
+    {% for tok in ['paper','surface','ink','ink-2','rule','axis','accent','own','none'] %}
+    <div class="sw"><b style="background: var(--{{ tok }})"></b><span>{{ tok }}<br><em data-hex="{{ tok }}"></em></span></div>
+    {% endfor %}
+  </div>
+
+  <div class="chips">
+    {% for i in range(1, 7) %}<span class="chip unit-{{ i }}"><b>{{ i }}</b> Cjelina</span>{% endfor %}
+    {% for i in [7, 8] %}<span class="chip unit-gen" style="--unit-i: {{ i }}"><b>{{ i }}</b> Cjelina</span>{% endfor %}
+  </div>
+
+  <ul class="state-list">
+    <li><i class="dot dot-verbatim"></i> doslovno iz materijala</li>
+    <li><i class="dot dot-own"></i> vlastiti primjer</li>
+    <li><i class="dot dot-none"></i> nema u materijalima</li>
+  </ul>
+  <div class="sample-answer unit-1">Osna simetrija je preslikavanje ravnine koje svakoj točki pridružuje točku T′.</div>
+  <div class="sample-answer sample-own">Jednakokračan trokut: os simetrije je simetrala osnovice.</div>
+  <div class="sample-answer sample-none">Nema u materijalima.</div>
+
+  <div class="prog-row"><span>Nije naučeno</span>{{ bar(0, 2) }}</div>
+  <div class="prog-row"><span>Jedan prolaz</span>{{ bar(1, 2) }}</div>
+  <div class="prog-row"><span>Cilj postignut</span>{{ bar(2, 2) }}</div>
+  <div class="prog-row"><span>2 od 4</span>{{ bar(2, 4) }}</div>
+  <div class="prog-row"><span>3 od 4</span>{{ bar(3, 4) }}</div>
+</section>
+{% endmacro %}
+
+{% block content %}
+<h1>Dizajn tokeni</h1>
+<p class="lead">Dva izgleda, Papir i Nacrt, svaki u svijetlom i tamnom načinu. Isti tokeni koriste i aplikacija i generirane skripte.</p>
+
+<h2>Papir</h2>
+<div class="matrix">
+  {{ tile('papir', 'light', 'Papir, svijetlo') }}
+  {{ tile('papir', 'dark', 'Papir, tamno') }}
+</div>
+
+<h2>Nacrt</h2>
+<div class="matrix">
+  {{ tile('nacrt', 'light', 'Nacrt, svijetlo') }}
+  {{ tile('nacrt', 'dark', 'Nacrt, tamno') }}
+</div>
+
+<script>
+  /* print the computed colour next to each swatch name */
+  document.querySelectorAll('.tile').forEach(function (t) {
+    var cs = getComputedStyle(t);
+    t.querySelectorAll('[data-hex]').forEach(function (el) {
+      var probe = document.createElement('i');
+      probe.style.color = 'var(--' + el.getAttribute('data-hex') + ')';
+      t.appendChild(probe);
+      var c = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g) || [];
+      t.removeChild(probe);
+      el.textContent = '#' + c.slice(0, 3).map(function (n) { return ('0' + Math.round(+n).toString(16)).slice(-2); }).join('').toUpperCase();
+    });
+  });
+</script>
+{% endblock %}

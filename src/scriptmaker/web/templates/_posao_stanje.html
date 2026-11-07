@@ -1,0 +1,50 @@
+{# The progress part of the page. While the job runs it asks for itself again every second (HTMX); the finished
+   versions carry no trigger, so the page stops asking. #}
+{% set pct = (job.fraction * 100)|round|int %}
+<section id="posao" class="job job-{{ job.state }}" aria-live="polite"
+  {% if job.running %}hx-get="/uvoz/posao/{{ job.job_id }}/stanje" hx-trigger="every 1s" hx-swap="outerHTML"{% endif %}>
+
+  {% if job.state == 'running' %}
+  <h2>Čitam datoteke{% if job.cancel %}: prekidam{% endif %}</h2>
+  <div class="bar" role="progressbar" aria-label="Napredak čitanja" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}">
+    {# the id lets HTMX keep the old width for a moment, so each poll slides the bar instead of jumping it #}
+    <span id="posao-fill" class="bar-fill" style="--frac: {{ '%.4f'|format(job.fraction) }}"></span>
+  </div>
+  <p class="job-count">Datoteke: <b>{{ job.done_files }}</b> od <b>{{ job.total_files }}</b>, prošlo {{ duration(job.seconds) }}</p>
+  {% if job.current %}<p class="muted job-current">Sada čitam: {{ job.current }}</p>{% endif %}
+  <p class="muted">Skenirane stranice i fotografije čitaju se OCR-om (prepoznavanjem slova), pa to može potrajati. Što je već pročitano ostaje spremljeno.</p>
+  <button class="btn" type="button" hx-post="/uvoz/posao/{{ job.job_id }}/prekini" hx-target="#posao" hx-swap="outerHTML"
+    {% if job.cancel %}disabled{% endif %}>Prekini čitanje</button>
+
+  {% elif job.state == 'done' %}
+  <h2>Gotovo</h2>
+  <div class="bar" role="progressbar" aria-label="Napredak čitanja" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+    <span class="bar-fill" style="--frac: 1"></span>
+  </div>
+  {% set s = job.summary %}
+  <ul class="summary">
+    <li><b>{{ s.files }}</b> {{ hr_plural(s.files, 'datoteka', 'datoteke', 'datoteka') }} gotovo za {{ duration(job.seconds) }}
+      {% if s.cached %}(od toga {{ s.cached }} iz pamćenja: već su bile pročitane){% endif %}</li>
+    <li><b>{{ s.pages }}</b> {{ hr_plural(s.pages, 'stranica', 'stranice', 'stranica') }}, od toga <b>{{ s.ocr_pages }}</b> pročitano OCR-om</li>
+    <li class="summary-review"><b>Za provjeru: {{ s.review_pages }}</b> {{ hr_plural(s.review_pages, 'stranica', 'stranice', 'stranica') }}
+      <span class="muted">(rukopis ili nesigurno čitanje; zaslon za provjeru dolazi u koraku 5.4)</span></li>
+  </ul>
+  {% if s.errors %}
+  <div class="notice notice-warn" role="note">
+    <h2>{{ s.errors }} {{ hr_plural(s.errors, 'datoteka nije pročitana', 'datoteke nisu pročitane', 'datoteka nije pročitano') }}</h2>
+    <ul>{% for p in s.problems %}<li>{{ p.file }}: {{ p.error }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+  <p><a class="btn btn-primary" href="/">Na popis predmeta</a></p>
+
+  {% elif job.state == 'canceled' %}
+  <h2>Prekinuto</h2>
+  <p>Pročitano do sada je spremljeno. Kad uvoz pokreneš ponovno, već pročitane datoteke se ne čitaju iznova.</p>
+  <p><a class="btn" href="/uvoz">Novi uvoz</a> <a class="btn" href="/">Na popis predmeta</a></p>
+
+  {% else %}
+  <h2>Čitanje nije uspjelo</h2>
+  <p role="alert">{{ job.error or 'Nešto je pošlo po zlu.' }}</p>
+  <p><a class="btn" href="/uvoz">Pokušaj ponovno</a> <a class="btn" href="/">Na popis predmeta</a></p>
+  {% endif %}
+</section>

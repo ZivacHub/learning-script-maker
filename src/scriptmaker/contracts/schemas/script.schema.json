@@ -1,0 +1,761 @@
+{
+  "$defs": {
+    "AnswerBlock": {
+      "additionalProperties": false,
+      "description": "One block of an answer. `text` may contain LaTeX between $...$ and $$...$$ (not in code).",
+      "properties": {
+        "caption": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "figure caption, the short title of a kind=hint box or the label of a kind=code box",
+          "title": "Caption"
+        },
+        "figure_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "for kind=figure, relative to data/",
+          "title": "Figure Path"
+        },
+        "items": {
+          "description": "for kind=list",
+          "items": {
+            "type": "string"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "kind": {
+          "default": "text",
+          "enum": [
+            "text",
+            "formula",
+            "list",
+            "figure",
+            "note",
+            "hint",
+            "code",
+            "compare"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "origin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "for kind=figure: where the picture was cut from, e.g. \"skripta.pdf, str. 4\"",
+          "title": "Origin"
+        },
+        "panes": {
+          "description": "for kind=compare: 1 to 4 panes side by side",
+          "items": {
+            "$ref": "#/$defs/ComparePane"
+          },
+          "title": "Panes",
+          "type": "array"
+        },
+        "text": {
+          "default": "",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "title": "AnswerBlock",
+      "type": "object"
+    },
+    "AnswerStatus": {
+      "enum": [
+        "verbatim",
+        "own",
+        "none"
+      ],
+      "title": "AnswerStatus",
+      "type": "string"
+    },
+    "Citation": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "minLength": 1,
+          "title": "File",
+          "type": "string"
+        },
+        "handwritten": {
+          "default": false,
+          "title": "Handwritten",
+          "type": "boolean"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "unchecked": {
+          "default": false,
+          "description": "handwritten source, saved by the machine (D59) and not confirmed by a person: the script says so",
+          "title": "Unchecked",
+          "type": "boolean"
+        },
+        "verify_score": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verify Score"
+        }
+      },
+      "required": [
+        "file",
+        "page",
+        "quote"
+      ],
+      "title": "Citation",
+      "type": "object"
+    },
+    "ComparePane": {
+      "additionalProperties": false,
+      "description": "One side of a compare box: \"doesn't work\" (bad), \"works\" (good) or a plain labelled pane (neutral).",
+      "properties": {
+        "kind": {
+          "default": "code",
+          "enum": [
+            "code",
+            "text"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "description": "short header, e.g. \"ne otkriva ništa\"",
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "tone": {
+          "default": "neutral",
+          "enum": [
+            "bad",
+            "good",
+            "neutral"
+          ],
+          "title": "Tone",
+          "type": "string"
+        }
+      },
+      "required": [
+        "label",
+        "text"
+      ],
+      "title": "ComparePane",
+      "type": "object"
+    },
+    "ExamQuestion": {
+      "additionalProperties": false,
+      "description": "A question that appeared on exams. `item_ids` lead to its answers in the unit; `sources` count how often.",
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "item_ids": {
+          "description": "ScriptItem ids; empty = no answer in the material",
+          "items": {
+            "type": "string"
+          },
+          "title": "Item Ids",
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/ExamSourceText"
+          },
+          "minItems": 1,
+          "title": "Sources",
+          "type": "array"
+        },
+        "text": {
+          "description": "tidied wording; may contain $LaTeX$",
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        },
+        "unit_id": {
+          "minLength": 1,
+          "title": "Unit Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "unit_id",
+        "text",
+        "sources"
+      ],
+      "title": "ExamQuestion",
+      "type": "object"
+    },
+    "ExamSource": {
+      "additionalProperties": false,
+      "description": "One past exam sheet or one message from a classmate. Each source counts at most once per question.",
+      "properties": {
+        "code": {
+          "description": "short key, e.g. \"LA\" or \"D1\"",
+          "pattern": "^[A-Za-z0-9_-]{1,12}$",
+          "title": "Code",
+          "type": "string"
+        },
+        "kind": {
+          "default": "sheet",
+          "enum": [
+            "sheet",
+            "report"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "description": "shown to the reader, e.g. \"Listić A\" or \"Dojava 1\"",
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "label"
+      ],
+      "title": "ExamSource",
+      "type": "object"
+    },
+    "ExamSourceText": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "description": "ExamSource.code",
+          "minLength": 1,
+          "title": "Source",
+          "type": "string"
+        },
+        "text": {
+          "description": "how the source wrote it (\"kako je zapisano\")",
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "text"
+      ],
+      "title": "ExamSourceText",
+      "type": "object"
+    },
+    "Exams": {
+      "additionalProperties": false,
+      "properties": {
+        "intro": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "paragraph under the exams heading",
+          "title": "Intro"
+        },
+        "method_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "\"Izvori i kako je brojano\" text; blank line = paragraph",
+          "title": "Method Note"
+        },
+        "predicted_max_per_unit": {
+          "default": 4,
+          "minimum": 1,
+          "title": "Predicted Max Per Unit",
+          "type": "integer"
+        },
+        "predicted_min_count": {
+          "default": 3,
+          "description": "questions with this count or more are predicted",
+          "minimum": 1,
+          "title": "Predicted Min Count",
+          "type": "integer"
+        },
+        "predicted_min_per_unit": {
+          "default": 3,
+          "minimum": 1,
+          "title": "Predicted Min Per Unit",
+          "type": "integer"
+        },
+        "questions": {
+          "items": {
+            "$ref": "#/$defs/ExamQuestion"
+          },
+          "title": "Questions",
+          "type": "array"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/ExamSource"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "top_min_count": {
+          "default": 4,
+          "description": "the \"most asked\" list shows counts at or above this",
+          "minimum": 1,
+          "title": "Top Min Count",
+          "type": "integer"
+        }
+      },
+      "title": "Exams",
+      "type": "object"
+    },
+    "Focus": {
+      "enum": [
+        "all",
+        "favorites",
+        "most_asked"
+      ],
+      "title": "Focus",
+      "type": "string"
+    },
+    "Preferences": {
+      "additionalProperties": false,
+      "properties": {
+        "default_target_passes": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "None = automatic",
+          "title": "Default Target Passes"
+        },
+        "dense": {
+          "default": false,
+          "title": "Dense",
+          "type": "boolean"
+        },
+        "focus": {
+          "$ref": "#/$defs/Focus",
+          "default": "all"
+        },
+        "font_scale": {
+          "default": 1.0,
+          "maximum": 1.6,
+          "minimum": 0.8,
+          "title": "Font Scale",
+          "type": "number"
+        },
+        "include_figures": {
+          "default": true,
+          "title": "Include Figures",
+          "type": "boolean"
+        },
+        "include_source_line": {
+          "default": true,
+          "title": "Include Source Line",
+          "type": "boolean"
+        },
+        "inline_katex": {
+          "default": true,
+          "title": "Inline Katex",
+          "type": "boolean"
+        },
+        "min_weight": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Min Weight",
+          "type": "integer"
+        },
+        "show_games": {
+          "default": true,
+          "title": "Show Games",
+          "type": "boolean"
+        },
+        "show_legend": {
+          "default": true,
+          "title": "Show Legend",
+          "type": "boolean"
+        },
+        "show_mode_cards": {
+          "default": true,
+          "title": "Show Mode Cards",
+          "type": "boolean"
+        },
+        "show_progress": {
+          "default": true,
+          "title": "Show Progress",
+          "type": "boolean"
+        },
+        "show_tools": {
+          "default": true,
+          "title": "Show Tools",
+          "type": "boolean"
+        },
+        "side_menu": {
+          "default": true,
+          "title": "Side Menu",
+          "type": "boolean"
+        },
+        "strictness": {
+          "$ref": "#/$defs/Strictness",
+          "default": "verbatim_and_own"
+        },
+        "template": {
+          "$ref": "#/$defs/Template",
+          "default": "qa"
+        },
+        "theme": {
+          "$ref": "#/$defs/Theme",
+          "default": "papir"
+        }
+      },
+      "title": "Preferences",
+      "type": "object"
+    },
+    "ScriptGroup": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ScriptItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "title": {
+          "description": "e.g. \"a) Definicije\"",
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title"
+      ],
+      "title": "ScriptGroup",
+      "type": "object"
+    },
+    "ScriptItem": {
+      "additionalProperties": false,
+      "properties": {
+        "answer_blocks": {
+          "items": {
+            "$ref": "#/$defs/AnswerBlock"
+          },
+          "title": "Answer Blocks",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "lead": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "one short line under the title (the author's own words; shown on the overview cards)",
+          "title": "Lead"
+        },
+        "no": {
+          "minimum": 1,
+          "title": "No",
+          "type": "integer"
+        },
+        "question": {
+          "minLength": 1,
+          "title": "Question",
+          "type": "string"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Citation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "$ref": "#/$defs/AnswerStatus"
+        },
+        "target_passes": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "override; None = unit/predmet default",
+          "title": "Target Passes"
+        },
+        "weight": {
+          "default": 0,
+          "description": "exam frequency, shown as the star badge",
+          "minimum": 0,
+          "title": "Weight",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "no",
+        "question",
+        "status"
+      ],
+      "title": "ScriptItem",
+      "type": "object"
+    },
+    "ScriptUnit": {
+      "additionalProperties": false,
+      "properties": {
+        "accent_index": {
+          "description": "1..6 use the fixed palette, above 6 are generated",
+          "minimum": 1,
+          "title": "Accent Index",
+          "type": "integer"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "exam_description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "one line about this unit on the exams tab",
+          "title": "Exam Description"
+        },
+        "groups": {
+          "items": {
+            "$ref": "#/$defs/ScriptGroup"
+          },
+          "title": "Groups",
+          "type": "array"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "kicker": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kicker"
+        },
+        "no": {
+          "minimum": 1,
+          "title": "No",
+          "type": "integer"
+        },
+        "target_passes": {
+          "anyOf": [
+            {
+              "maximum": 10,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Passes"
+        },
+        "title": {
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "no",
+        "title",
+        "accent_index"
+      ],
+      "title": "ScriptUnit",
+      "type": "object"
+    },
+    "Strictness": {
+      "enum": [
+        "verbatim_only",
+        "verbatim_and_own",
+        "summary"
+      ],
+      "title": "Strictness",
+      "type": "string"
+    },
+    "Template": {
+      "enum": [
+        "qa",
+        "overview"
+      ],
+      "title": "Template",
+      "type": "string"
+    },
+    "Theme": {
+      "enum": [
+        "papir",
+        "nacrt"
+      ],
+      "title": "Theme",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "exams": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Exams"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "lang": {
+      "default": "hr",
+      "title": "Lang",
+      "type": "string"
+    },
+    "predmet": {
+      "minLength": 1,
+      "title": "Predmet",
+      "type": "string"
+    },
+    "preferences": {
+      "$ref": "#/$defs/Preferences"
+    },
+    "subtitle": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Subtitle"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "units": {
+      "items": {
+        "$ref": "#/$defs/ScriptUnit"
+      },
+      "title": "Units",
+      "type": "array"
+    },
+    "version": {
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "predmet",
+    "title"
+  ],
+  "title": "Script",
+  "type": "object"
+}

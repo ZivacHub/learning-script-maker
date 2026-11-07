@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}/provjera">Za provjeru</a></p>
+<h1>Gemini čita stranice</h1>
+{% include "_gemini_stanje.html" %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+{% endblock %}

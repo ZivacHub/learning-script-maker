@@ -1,0 +1,24 @@
+{# The consent screen (D49): which pages go to Google. `rows` = consent_rows(); `action` = where the ticked pages are sent, `cancel` = where Odustani goes (nothing is sent). #}
+{% from "_ai_text.html" import warning %}
+{% macro consent(rows, action, cancel) -%}
+<section class="consent" aria-labelledby="consent-h">
+  <h2 id="consent-h">Ove stranice odlaze Googleu</h2>
+  {{ warning(rows) }}
+  <form method="post" action="{{ action }}">
+    <fieldset class="consent-pages">
+      <legend>Označi stranice koje smiju otići ({{ rows|length }} {{ hr_plural(rows|length, 'stranica', 'stranice', 'stranica') }} u popisu)</legend>
+      <ul>
+        {% for r in rows %}
+        <li><label class="check"><input type="checkbox" name="stranica" value="{{ r.key or loop.index0 }}"{% if r.checked %} checked{% endif %}>
+          <span class="consent-file">{{ r.file }}</span>, str. {{ r.page }}
+          <span class="muted">{{ r.role_label }}</span>{% if r.others_notes %} <span class="tag tag-warn">Tuđe bilješke</span>{% endif %}{% if r.note %} <span class="tag">{{ r.note }}</span>{% endif %}</label></li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Pošalji označene stranice Googleu</button>
+      <a class="btn" href="{{ cancel }}">Odustani</a>
+    </div>
+  </form>
+</section>
+{%- endmacro %}

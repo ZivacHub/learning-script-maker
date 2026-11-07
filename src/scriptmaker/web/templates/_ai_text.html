@@ -1,0 +1,10 @@
+{# The plain warning about what Google does with what is sent (shared by Settings and the consent screen). #}
+{% macro warning(rows=none, what='kao sliku', purpose='da je pročita') -%}
+<div class="ai-warning" role="note">
+  <p>Aplikacija će svaku označenu stranicu poslati {{ what }} Googleovu servisu Gemini {{ purpose }}.</p>
+  <p><b>S besplatnim ključem</b> Google smije zadržati ono što pošalješ i koristiti to za poboljšanje svojih proizvoda, a ljudi ga mogu čitati (odvojeno od tvog računa). S plaćenim ključem to ne vrijedi.
+    <a href="https://ai.google.dev/gemini-api/terms_preview" rel="noopener noreferrer" target="_blank">Googleovi uvjeti</a></p>
+  <p>Ništa se ne šalje dok ne potvrdiš. Sljedeći put pitamo ponovno.</p>
+  {% if rows and rows|selectattr('others_notes')|list %}<p><b>Bilješke drugih osoba nisu označene.</b> Označi ih samo ako se i oni s tim slažu.</p>{% endif %}
+</div>
+{%- endmacro %}

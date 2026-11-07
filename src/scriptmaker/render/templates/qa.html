@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="{{ lang }}" data-look="{{ look }}"{% if theme %} data-theme="{{ theme }}"{% endif %}{% if dense %} data-dense{% endif %}{% if side_menu %} data-menu="side"{% endif %}{% if hide_cards %} data-no-cards{% endif %}{% if hide_tools %} data-no-tools{% endif %}{% if hide_legend %} data-no-legend{% endif %}{% if font_scale %} style="--font-scale:{{ font_scale }}"{% endif %}>
+{% include "_head.html" %}
+<body>
+<a class="skip" href="#gradivo">Preskoči na sadržaj</a>
+
+{% set theme_btn %}<button class="icon-btn" id="theme-btn" type="button" aria-label="Prebaci svijetli/tamni način" title="Prebaci svijetli/tamni način">
+    <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+    <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  </button>{% endset %}
+{% if side_menu %}<button id="menu-btn" type="button" aria-controls="menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Lekcije</span></button>
+<div id="menu-scrim" hidden></div>
+{{ theme_btn }}{% endif %}
+<nav class="top" id="menu" aria-label="Sadržaj">
+  <div class="top-inner">
+    {% if side_menu %}<button class="menu-close" type="button" aria-label="Zatvori izbornik"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>Zatvori</span></button>{% endif %}
+    <span class="brand"><a href="#vrh">{{ brand }}</a></span>
+    <span class="mode-sw js-only" role="group" aria-label="Prikaz">
+      <button type="button" data-mode="gradivo" aria-pressed="true">Gradivo</button>
+      {% if exams %}<button type="button" data-mode="ispiti" aria-pressed="false">Ispiti</button>{% endif %}
+      <button type="button" data-mode="favoriti" aria-pressed="false">Favoriti<span class="fav-count" id="fav-count"></span></button>
+      {% if games %}<button type="button" data-mode="igre" aria-pressed="false">Igre</button>{% endif %}
+    </span>
+    <span class="pills pills-g">
+      {% for u in units %}<a class="pill {{ u.css_class }}"{% if u.style %} style="{{ u.style }}"{% endif %} href="#{{ u.anchor }}"><span class="n">{{ u.no }}</span> {{ u.title }}</a>
+      {% endfor %}
+    </span>
+    {% if exams %}<span class="pills pills-i">
+      {% for s in exams.sections %}<a class="pill {{ s.css_class }}"{% if s.style %} style="{{ s.style }}"{% endif %} href="#{{ s.anchor }}">{{ s.title }}</a>
+      {% endfor %}
+    </span>{% endif %}
+    <span class="pills pills-f js-only">
+      {% for u in units %}<a class="pill {{ u.css_class }}"{% if u.style %} style="{{ u.style }}"{% endif %} href="#{{ u.fav_anchor }}"><span class="n">{{ u.no }}</span> {{ u.title }}<span class="fc"></span></a>
+      {% endfor %}
+    </span>
+  </div>
+{% if not side_menu %}{{ theme_btn }}{% endif %}
+</nav>
+
+<div class="wrap" id="vrh">
+
+<header class="hero">
+  <p class="eyebrow">{{ eyebrow }}</p>
+  <h1>{{ title }}</h1>
+  {% if subtitle %}<p class="subtitle">{{ subtitle }}</p>{% endif %}
+  <div class="modes js-only">
+    <a class="mode-card" data-mode="gradivo" href="#gradivo">Gradivo<small>{{ unit_count }} · pitanja i doslovni odgovori{% if exams %} · <span class="exb">★ +N</span> = koliko se često pita{% endif %}</small></a>
+    {% if exams %}<a class="mode-card ex" data-mode="ispiti" href="#ispiti">Ispiti<small>predviđeni ispit · najčešća pitanja · sva pitanja po lekcijama</small></a>{% endif %}
+    <a class="mode-card fv" data-mode="favoriti" href="#favoriti">Favoriti<small><span id="fav-mc-n">Još ništa nije označeno</span> · razvrstano po lekcijama · pretraga i filteri</small></a>
+    {% if games %}<a class="mode-card gm" data-mode="igre" href="#igre">Igre<small>kartice i quiz · samo iz doslovnih odgovora</small></a>{% endif %}
+  </div>
+</header>
+
+<main>
+
+<div id="gradivo">
+
+<div class="toolbar">
+  <input class="search" id="search" type="search" placeholder="Pretraži sva pitanja…" aria-label="Pretraži pitanja" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="search">
+  <button class="chip" id="f-none" type="button" aria-pressed="false">Prikaži samo bez odgovora</button>
+  <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+</div>
+
+{% if hidden_note %}<p class="pref-note">{{ hidden_note }}</p>
+{% endif %}
+<div class="legend">
+  <span><i class="dot s"></i> doslovno prepisano iz materijala</span>
+  <span><i class="dot o"></i> vlastiti primjer / izračun po postupku iz materijala</span>
+  <span><i class="dot n"></i> nema u materijalima</span>
+  <span class="js-only"><svg class="lg-heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> srce uz pitanje = dodaj u Favorite</span>
+</div>
+
+{% for u in units %}
+<section class="lesson {{ u.css_class }}"{% if u.style %} style="{{ u.style }}"{% endif %} id="{{ u.anchor }}" data-unit="{{ u.anchor }}">
+  <div class="lesson-head">
+    <p class="kicker">{{ u.kicker }}</p>
+    <h2>{{ u.title }}</h2>
+    {% if u.description %}<p>{{ u.description }}</p>{% endif %}
+  </div>
+
+  {% if u.emptied %}<p class="filtered-note">{{ emptied_line }}</p>{% endif %}
+  {% if u.groups %}<h3 class="sec">Sva pitanja</h3>{% endif %}
+  {% for g in u.groups %}
+  <div class="group">
+    <p class="group-title">{{ g.title }}</p>
+    <ol class="index">
+      {% for it in g.entries %}<li data-st="{{ it.dot }}"><a href="#{{ it.anchor }}"><span class="num">{{ it.no }}.</span><span class="txt">{{ it.question_html }}{% if it.weight %}<span class="exb" title="Koliko se često pita na ispitima">★ +{{ it.weight }}</span>{% endif %}</span><i class="dot {{ it.dot }}" role="img" aria-label="{{ it.status_label }}"></i></a></li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endfor %}
+
+  {% for g in u.groups %}{% for it in g.entries %}
+  <article class="qa" id="{{ it.anchor }}" data-item="{{ it.id }}" data-st="{{ it.dot }}" data-unit="{{ u.anchor }}" data-no="{{ it.no }}" data-freq="{{ it.freq }}">
+    <div class="q"><span class="num">{{ it.no }}.</span><h4>{{ it.question_html }}{% if it.weight %}<span class="exb" title="Koliko se često pita na ispitima">★ +{{ it.weight }}</span>{% endif %}</h4></div>
+    <div class="answer">
+      {% if it.status == 'verbatim' %}
+        {% if show_source and it.source_line %}<p class="src">{{ it.source_line }}</p>{% endif %}
+        <div class="verbatim">{{ it.answer_html }}</div>
+      {% elif it.status == 'own' %}
+        <p class="src">Vlastiti primjer / izračun po postupku iz materijala.</p>
+        <div class="own-block">{{ it.answer_html }}</div>
+      {% else %}
+        <div class="none-block"><span class="big">Nema u materijalima.</span>Ovo pitanje nije pronađeno u priloženim materijalima, zato nije ništa izmišljeno.</div>
+      {% endif %}
+      <a class="back" href="#{{ u.anchor }}">↑ natrag na popis pitanja</a>
+    </div>
+  </article>
+  {% endfor %}{% endfor %}
+</section>
+{% endfor %}
+
+</div><!-- /gradivo -->
+
+{% if exams %}
+<div id="ispiti" class="lesson-ex">
+
+  <div class="ex-hero">
+    <p class="kicker">Ispitni dio</p>
+    <h2>Ispiti — što se najčešće pita</h2>
+    <p>{% if exams.intro %}{{ exams.intro }} {% endif %}Pitanja su razvrstana po lekcijama, od najčešćeg prema najrjeđem. <b>(+N)</b> znači u koliko se različitih izvora pitanje pojavilo. <b>odgovor →</b> vodi na odgovor u gradivu, a gumb <b>↩ Natrag na pitanje</b> (dolje desno) vraća te ovamo.</p>
+    <div class="ex-legend">
+      <span><span class="st">★★★</span> +5 i više</span>
+      <span><span class="st">★★</span> +3 / +4</span>
+      <span><span class="st">★</span> +2</span>
+      <span>bez zvjezdice +1</span>
+    </div>
+  </div>
+
+  <div class="ex-block" id="ex-predvidjeni">
+    <div class="ex-block-head">
+      <h3>Predviđeni ispit</h3>
+      <span class="ex-prog js-only" id="pe-prog"></span>
+    </div>
+    <p class="ex-block-desc">Iz svake lekcije su uzeta {{ exams.predicted_floor }}–{{ exams.predicted_max }} najčešća pitanja: sva s (+{{ exams.predicted_min }}) ili više, najviše {{ exams.predicted_max }} po lekciji, a ako ih je manje od {{ exams.predicted_floor }}, dopunjena su sljedećim najčešćim. Kvačicom <b>znam</b> označi što si naučio/la. Oznake se pamte samo u ovom pregledniku.</p>
+    <div class="pe-sheet" id="pe-sheet">
+      {% for z in exams.predicted %}
+      <div class="pe-z">
+        <h4><span class="zn">{{ z.no }}.</span>{{ z.title }}</h4>
+        {% for x in z.rows %}
+        <div class="pe-item" data-k="{{ x.id }}" data-a="{{ x.answer_ids }}"><span class="l">{{ x.letter }})</span><span class="t">{{ x.text_html }} <span class="cnt">(+{{ x.count }})</span></span><span class="r">
+          {% if x.answers %}{% for a in x.answers %}<a class="ans" href="{{ a.href }}">{% if loop.first %}odgovor →{% else %}{{ a.label }}{% endif %}</a>{% endfor %}{% else %}<span class="noans">nema u skripti</span>{% endif %}
+          <label class="js-only"><input type="checkbox"> znam</label></span></div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    <button class="chip js-only" id="pe-reset" type="button">Poništi sve kvačice</button>
+  </div>
+
+  {% if exams.top %}
+  <div class="ex-block" id="ex-top">
+    <div class="ex-block-head"><h3>Najčešća pitanja (+{{ exams.top_min }} i više)</h3></div>
+    <ol class="ex-toplist">
+      {% for x in exams.top %}
+      <li data-a="{{ x.answer_ids }}"><span class="st">{{ x.stars }}</span><span>{{ x.text_html }} <span class="cnt">(+{{ x.count }})</span> <span class="lk">— {{ x.unit_title }}</span></span><span class="anss">{% if x.answers %}<a class="ans" href="{{ x.answers[0].href }}">odgovor →</a>{% endif %}</span></li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endif %}
+
+  <div class="ex-block" id="ex-po-lekcijama">
+    <div class="ex-block-head"><h3>Sva pitanja po lekcijama</h3></div>
+    <div class="ex-tools js-only">
+      <input class="search" id="ex-search" type="search" placeholder="Pretraži pitanja s ispita…" aria-label="Pretraži pitanja s ispita" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="search">
+      <button class="chip ex-f" type="button" data-min="1" aria-pressed="true">Sva</button>
+      <button class="chip ex-f" type="button" data-min="3" aria-pressed="false">★★ i više</button>
+      <button class="chip ex-f" type="button" data-min="5" aria-pressed="false">★★★</button>
+    </div>
+    <div id="ex-lessons">
+      {% for s in exams.sections %}
+      <div class="ex-les {{ s.css_class }}"{% if s.style %} style="{{ s.style }}"{% endif %} id="{{ s.anchor }}">
+        <div class="ex-les-head"><span class="k">{{ s.kicker }}</span><h4>{{ s.title }}</h4><a class="to" href="{{ s.href }}">gradivo →</a></div>
+        {% if s.description %}<p class="ex-les-desc">{{ s.description }}</p>{% endif %}
+        {% for x in s.questions %}
+        <div class="ex-q {{ x.tier }}" data-n="{{ x.count }}" data-a="{{ x.answer_ids }}"><span class="st">{{ x.stars }}</span><div>
+          <div class="top"><span class="qt">{{ x.text_html }} <span class="cnt">(+{{ x.count }})</span></span><span class="anss">{% if x.answers %}{% for a in x.answers %}<a class="ans" href="{{ a.href }}">odgovor {{ a.label }} →</a>{% endfor %}{% else %}<span class="noans">nema posebnog pitanja u skripti</span>{% endif %}</span></div>
+          <details><summary>{{ x.summary }} — kako je zapisano</summary><ul>
+            {% for src in x.sources %}<li><b>{{ src.label }}:</b> „{{ src.text_html }}”</li>
+            {% endfor %}</ul></details>
+        </div></div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if exams.method %}
+  <details class="ex-block ex-src" id="ex-provjera">
+    <summary><h3>Izvori i kako je brojano</h3><span class="lk">otvori</span></summary>
+    {% for p in exams.method %}<p>{{ p }}</p>
+    {% endfor %}
+  </details>
+  {% endif %}
+</div><!-- /ispiti -->
+{% endif %}
+
+<div id="favoriti" class="lesson-fav js-only">
+
+  <div class="fav-hero">
+    <h2>Favoriti</h2>
+    <p>Pitanja koja si označio/la srcem — u gradivu{% if exams %} ili na ispitima{% endif %}. Uvijek su razvrstana po lekcijama. Klikni pitanje da otvoriš odgovor (isti je kao u gradivu, s oznakom izvora). Favoriti se pamte samo u ovom pregledniku.</p>
+  </div>
+
+  <div class="fav-panel" id="fav-panel">
+    <div class="fav-row">
+      <input class="search" id="fav-search" type="search" placeholder="Pretraži favorite…" aria-label="Pretraži favorite" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="search">
+      <button class="chip" id="fav-inans" type="button" aria-pressed="false">Traži i u odgovorima</button>
+    </div>
+    {% if exams %}<div class="fav-row" role="group" aria-label="Učestalost na ispitima">
+      <span class="lab">Učestalost</span>
+      <button class="chip" type="button" data-g="freq" data-v="0" aria-pressed="true">Sva</button>
+      <button class="chip" type="button" data-g="freq" data-v="2" aria-pressed="false">★ +2 i više</button>
+      <button class="chip" type="button" data-g="freq" data-v="3" aria-pressed="false">★★ +3 i više</button>
+      <button class="chip" type="button" data-g="freq" data-v="5" aria-pressed="false">★★★ +5 i više</button>
+    </div>{% endif %}
+    <div class="fav-row" role="group" aria-label="Vrsta odgovora">
+      <span class="lab">Vrsta odgovora</span>
+      <button class="chip" type="button" data-g="st" data-v="all" aria-pressed="true">Sve</button>
+      <button class="chip" type="button" data-g="st" data-v="s" aria-pressed="false"><i class="dot s"></i>Doslovno iz materijala</button>
+      <button class="chip" type="button" data-g="st" data-v="o" aria-pressed="false"><i class="dot o"></i>Vlastiti primjer</button>
+      <button class="chip" type="button" data-g="st" data-v="n" aria-pressed="false" hidden><i class="dot n"></i>Nema u materijalima</button>
+    </div>
+    <div class="fav-row" role="group" aria-label="Poredak unutar lekcije">
+      <span class="lab">Poredak u lekciji</span>
+      <button class="chip" type="button" data-g="sort" data-v="order" aria-pressed="true">Kao u skripti</button>
+      {% if exams %}<button class="chip" type="button" data-g="sort" data-v="freq" aria-pressed="false">Najčešća prvo</button>{% endif %}
+    </div>
+    <div class="fav-row">
+      <span class="lab">Odgovori</span>
+      <button class="chip" type="button" id="fav-open-all">Otvori sve</button>
+      <button class="chip" type="button" id="fav-close-all">Zatvori sve</button>
+      <button class="chip danger" type="button" id="fav-clear">Ukloni sve favorite</button>
+    </div>
+  </div>
+
+  <div class="fav-sum" id="fav-sum" aria-live="polite"></div>
+
+  {% for u in units %}
+  <section class="fav-les {{ u.css_class }}"{% if u.style %} style="{{ u.style }}"{% endif %} id="{{ u.fav_anchor }}" data-unit="{{ u.anchor }}" aria-labelledby="{{ u.fav_anchor }}-h">
+    <div class="fav-les-head">
+      <span class="k">{{ u.kicker }}</span>
+      <h3 id="{{ u.fav_anchor }}-h">{{ u.title }}</h3>
+      <span class="n"></span>
+      <a class="to" href="#{{ u.anchor }}">gradivo →</a>
+    </div>
+    <div class="fav-list"></div>
+    <p class="fav-none">Još nema favorita u ovoj lekciji. Klikni srce uz pitanje da ga dodaš.</p>
+  </section>
+  {% endfor %}
+</div><!-- /favoriti -->
+
+{% if games %}
+<div id="igre" class="lesson-games js-only">
+  <div class="fav-hero">
+    <h2>Igre</h2>
+    <p>Kartice i quiz od odgovora koji su doslovno prepisani iz gradiva. Pitanja koja ne znaš vraćaju se dok ih ne svladaš. Rezultati se pamte samo u ovom pregledniku.</p>
+  </div>
+  <div id="games-root" class="games-root"></div>
+</div><!-- /igre -->
+{% endif %}
+
+</main>
+
+<footer>{{ footer }}</footer>
+</div>
+
+<button id="ret-btn" type="button" aria-label="Natrag na pitanje" class="js-only"><span>↩ Natrag</span><span class="rt"></span></button>
+<button id="top-btn" type="button" aria-label="Na vrh stranice">↑ Na vrh</button>
+
+{% if katex_js %}<script>
+{{ katex_js }}
+</script>{% endif %}
+<script>
+{{ boot_js }}
+</script>
+</body>
+</html>

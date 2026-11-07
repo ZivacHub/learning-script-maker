@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "job_id": "job-0001",
+  "author": "claude-code",
+  "items": [
+    {
+      "question_id": "u1q1",
+      "status": "verbatim",
+      "answer_markdown": "Osna simetrija s obzirom na pravac $p$ je preslikavanje ravnine koje svakoj točki $T$ pridružuje točku $T'$.",
+      "quote": "Osna simetrija s obzirom na pravac p je preslikavanje ravnine",
+      "source_ref": {"file": "Materijali/1. Primjer/skripta_primjer.pdf", "page": 1}
+    },
+    {"question_id": "u1q2", "status": "own", "answer_markdown": "Jednakokračan trokut ima jednu os simetrije.", "note": "vlastiti primjer"},
+    {"question_id": "u1q3", "status": "none"}
+  ]
+}

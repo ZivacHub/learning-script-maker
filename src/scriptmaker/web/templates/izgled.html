@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "_napredak.html" import goal_reason %}
+{% from "_prefs.html" import radios, toggle %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ card.id }}">{{ card.name }}</a></p>
+<div class="page-head">
+  <h1>Izgled skripte</h1>
+</div>
+<p class="lead">Ovo je standardni izgled skripte i većini je dovoljan. Promjena se sprema čim je napraviš i vrijedi za sljedeću izradu.</p>
+
+<form id="prefs-form" class="prefs" method="post" action="/predmet/{{ card.id }}/postavke"
+      hx-post="/predmet/{{ card.id }}/postavke" hx-trigger="change" hx-swap="none" data-autosave>
+
+  <div class="pref-col pref-main">
+    {{ radios('theme', 'Tema', theme_choices, prefs.theme.value, seg=true) }}
+    <label class="field pref-select">
+      <span>Veličina slova</span>
+      <select name="font_scale">
+        {% for value, label in font_choices %}<option value="{{ value }}"{% if font_matches(value, prefs.font_scale) %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <details class="more"{% if look_custom %} open{% endif %}>
+    <summary>Sve postavke</summary>
+    <div class="more-body">
+      <div class="pref-col">
+        <h3>Što se vidi u skripti</h3>
+        {{ toggle('side_menu', 'Izbornik lekcija s lijeve strane', 'Ako ugasiš, lekcije su u traci na vrhu.', prefs.side_menu) }}
+        {{ toggle('show_mode_cards', 'Velike kartice ispod naslova', 'Gradivo, Ispiti i Favoriti.', prefs.show_mode_cards) }}
+        {{ toggle('show_tools', 'Pretraga i filter', 'Polje za traženje pitanja.', prefs.show_tools) }}
+        {{ toggle('show_legend', 'Objašnjenje točkica', 'Što znači doslovno, vlastiti primjer i nema u materijalima.', prefs.show_legend) }}
+        {{ toggle('show_progress', 'Traka napretka', 'Gumb „Naučeno” i traka uz svako pitanje.', prefs.show_progress) }}
+        {{ toggle('show_games', 'Igre', 'Kartice i quiz u skripti, samo iz doslovnih odgovora.', prefs.show_games) }}
+        {{ toggle('dense', 'Gušći razmak', 'Više teksta na ekranu, manje praznine među pitanjima.', prefs.dense) }}
+      </div>
+      <div class="pref-col">
+        <h3>Sadržaj</h3>
+        {{ radios('template', 'Vrsta skripte', template_choices, prefs.template.value, seg=true) }}
+        {{ radios('strictness', 'Odgovori', strictness_choices, prefs.strictness.value) }}
+        {{ radios('focus', 'Pitanja', focus_choices, prefs.focus.value) }}
+        <label class="field pref-select" data-when-focus="most_asked"{% if prefs.focus.value != 'most_asked' %} hidden{% endif %}>
+          <span>Pitanje mora biti u barem ovoliko ispitnih izvora</span>
+          <select name="min_weight">
+            {% for n in min_weight_choices %}<option value="{{ n }}"{% if n == min_weight %} selected{% endif %}>{{ n }}</option>{% endfor %}
+          </select>
+        </label>
+        {{ toggle('include_figures', 'Slike u odgovorima', 'Ako ugasiš, slike se izostavljaju, a to piše u skripti.', prefs.include_figures) }}
+        {{ toggle('include_source_line', 'Izvor ispod odgovora', 'Ime datoteke i stranica odakle je tekst prepisan.', prefs.include_source_line) }}
+        {{ toggle('inline_katex', 'Formule ugrađene u datoteku', 'Formule se vide i bez interneta. Ako ugasiš, datoteka je oko 600 KB manja.', prefs.inline_katex) }}
+        <label class="field pref-select">
+          <span>Koliko prolaza za zeleno</span>
+          <select name="default_target_passes">
+            <option value="auto"{% if prefs.default_target_passes is none %} selected{% endif %}>Automatski (prema broju pitanja)</option>
+            {% for n in range(1, max_passes + 1) %}<option value="{{ n }}"{% if prefs.default_target_passes == n %} selected{% endif %}>{{ n }} {{ hr_plural(n, 'prolaz', 'prolaza', 'prolaza') }}</option>{% endfor %}
+          </select>
+        </label>
+        <p class="muted goal-reason" data-goal-reason data-count="{{ goal.count }}" data-steps="{% for limit, passes in auto_steps %}{{ limit }}:{{ passes }},{% endfor %}">{{ goal_reason(goal) }}</p>
+      </div>
+    </div>
+  </details>
+
+  <p class="save-status" role="status" aria-live="polite" data-status></p>
+  <noscript><button class="btn btn-primary" type="submit">Spremi postavke</button></noscript>
+</form>
+
+<div class="look-actions">
+  <a class="btn btn-primary" href="/predmet/{{ card.id }}/skripta">Izradi skriptu</a>
+  <a class="btn" href="/predmet/{{ card.id }}">Natrag na predmet</a>
+  {% if look_custom %}
+  <form method="post" action="/predmet/{{ card.id }}/izgled/zadano">
+    <button class="btn" type="submit">Vrati standardni izgled</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+<script src="/static/subject.js" defer></script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% if models %}
+<p class="veza {{ 'veza-ok' if models.ok else 'veza-bad' }}" role="status"><span class="veza-shape" aria-hidden="true">{{ '✓' if models.ok else '✕' }}</span> {{ models.message }}</p>
+{% if models.names %}
+<ul class="model-list">
+  {% for name in models.names %}
+  <li>
+    <form method="post" action="/postavke/model">
+      <input type="hidden" name="model" value="{{ name }}">
+      <code>{{ name }}</code>
+      {% if name == model %}<span class="tag">Odabrano</span>{% else %}<button class="btn" type="submit">Koristi ovaj</button>{% endif %}
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endif %}

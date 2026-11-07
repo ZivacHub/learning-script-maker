@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <h1>Moji predmeti</h1>
+  <a class="btn btn-primary" href="/uvoz">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    Novi predmet
+  </a>
+</div>
+
+<div id="predmeti" class="subjects-region" data-source="/predmeti/kartice" aria-live="polite">
+{% include "_kartice.html" %}
+</div>
+
+<template id="subjects-skeleton">{% include "_skeleton.html" %}</template>
+<script src="/static/dashboard.js" defer></script>
+<script src="/static/exam.js" defer></script>
+{% endblock %}

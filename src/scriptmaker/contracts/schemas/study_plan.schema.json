@@ -1,0 +1,234 @@
+{
+  "$defs": {
+    "DayLoad": {
+      "additionalProperties": false,
+      "properties": {
+        "day": {
+          "format": "date",
+          "title": "Day",
+          "type": "string"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/DayTask"
+          },
+          "title": "Tasks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "day"
+      ],
+      "title": "DayLoad",
+      "type": "object"
+    },
+    "DayTask": {
+      "additionalProperties": false,
+      "properties": {
+        "minutes": {
+          "exclusiveMinimum": 0,
+          "title": "Minutes",
+          "type": "number"
+        },
+        "predmet": {
+          "title": "Predmet",
+          "type": "string"
+        },
+        "unit_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Id"
+        }
+      },
+      "required": [
+        "predmet",
+        "minutes"
+      ],
+      "title": "DayTask",
+      "type": "object"
+    },
+    "EstimateLine": {
+      "additionalProperties": false,
+      "description": "One line of the visible formula breakdown (estimates are never a black box).",
+      "properties": {
+        "difficulty_factor": {
+          "exclusiveMinimum": 0,
+          "title": "Difficulty Factor",
+          "type": "number"
+        },
+        "minutes": {
+          "minimum": 0,
+          "title": "Minutes",
+          "type": "number"
+        },
+        "passes_remaining": {
+          "minimum": 0,
+          "title": "Passes Remaining",
+          "type": "integer"
+        },
+        "reading_wpm": {
+          "exclusiveMinimum": 0,
+          "title": "Reading Wpm",
+          "type": "number"
+        },
+        "unit_id": {
+          "title": "Unit Id",
+          "type": "string"
+        },
+        "words": {
+          "minimum": 0,
+          "title": "Words",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "unit_id",
+        "words",
+        "reading_wpm",
+        "difficulty_factor",
+        "passes_remaining",
+        "minutes"
+      ],
+      "title": "EstimateLine",
+      "type": "object"
+    },
+    "PlanStatus": {
+      "enum": [
+        "no_date",
+        "ok",
+        "start_soon",
+        "start_now",
+        "impossible",
+        "done"
+      ],
+      "title": "PlanStatus",
+      "type": "string"
+    },
+    "PredmetPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "default": true,
+          "title": "Active",
+          "type": "boolean"
+        },
+        "breakdown": {
+          "items": {
+            "$ref": "#/$defs/EstimateLine"
+          },
+          "title": "Breakdown",
+          "type": "array"
+        },
+        "days_left": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Days Left"
+        },
+        "exam_date": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exam Date"
+        },
+        "predmet": {
+          "minLength": 1,
+          "title": "Predmet",
+          "type": "string"
+        },
+        "remaining_minutes": {
+          "minimum": 0,
+          "title": "Remaining Minutes",
+          "type": "number"
+        },
+        "start_by": {
+          "anyOf": [
+            {
+              "format": "date",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start By"
+        },
+        "status": {
+          "$ref": "#/$defs/PlanStatus"
+        }
+      },
+      "required": [
+        "predmet",
+        "remaining_minutes",
+        "status"
+      ],
+      "title": "PredmetPlan",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "buffer_days": {
+      "default": 2,
+      "minimum": 0,
+      "title": "Buffer Days",
+      "type": "integer"
+    },
+    "daily_budget_minutes": {
+      "exclusiveMinimum": 0,
+      "title": "Daily Budget Minutes",
+      "type": "integer"
+    },
+    "days": {
+      "items": {
+        "$ref": "#/$defs/DayLoad"
+      },
+      "title": "Days",
+      "type": "array"
+    },
+    "predmeti": {
+      "items": {
+        "$ref": "#/$defs/PredmetPlan"
+      },
+      "title": "Predmeti",
+      "type": "array"
+    },
+    "today": {
+      "format": "date",
+      "title": "Today",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "today",
+    "daily_budget_minutes"
+  ],
+  "title": "StudyPlan",
+  "type": "object"
+}

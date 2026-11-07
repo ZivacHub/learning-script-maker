@@ -1,0 +1,125 @@
+{
+  "$defs": {
+    "AnswerSetItem": {
+      "additionalProperties": false,
+      "properties": {
+        "answer_markdown": {
+          "default": "",
+          "title": "Answer Markdown",
+          "type": "string"
+        },
+        "explanation_markdown": {
+          "default": "",
+          "description": "optional plain-words explanation of the question for a student, NOT quoted from the materials (about 600 characters at most; the app flags it as AI text and keeps it apart from the answer)",
+          "title": "Explanation Markdown",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        },
+        "question_id": {
+          "minLength": 1,
+          "title": "Question Id",
+          "type": "string"
+        },
+        "quote": {
+          "default": "",
+          "description": "exact text copied from the cited page (verbatim only)",
+          "title": "Quote",
+          "type": "string"
+        },
+        "source_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "$ref": "#/$defs/AnswerStatus"
+        }
+      },
+      "required": [
+        "question_id",
+        "status"
+      ],
+      "title": "AnswerSetItem",
+      "type": "object"
+    },
+    "AnswerStatus": {
+      "enum": [
+        "verbatim",
+        "own",
+        "none"
+      ],
+      "title": "AnswerStatus",
+      "type": "string"
+    },
+    "SourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "minLength": 1,
+          "title": "File",
+          "type": "string"
+        },
+        "page": {
+          "minimum": 1,
+          "title": "Page",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "file",
+        "page"
+      ],
+      "title": "SourceRef",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "author": {
+      "description": "e.g. \"claude-code\", \"gemini\", \"manual\"",
+      "minLength": 1,
+      "title": "Author",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/AnswerSetItem"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "job_id": {
+      "minLength": 1,
+      "title": "Job Id",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "job_id",
+    "author"
+  ],
+  "title": "AnswerSet",
+  "type": "object"
+}

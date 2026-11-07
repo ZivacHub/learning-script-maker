@@ -1,0 +1,309 @@
+/* ==========================================================================
+   Learning Script Maker: design tokens (single source for the app shell AND generated scripts)
+
+   Two looks x two modes, selected by attributes on <html> or on any wrapper element:
+     data-look="papir" | "nacrt"     (default papir)
+     data-theme="light" | "dark"     (default: follows the OS; same attribute the reference scripts use)
+
+   Papir  = reference-script.html palette (warm paper, serif headings, per-unit accent colours)
+   Nacrt  = rppoon.html palette (cool blueprint, mono headings)
+
+   Rule: components use ONLY these semantic tokens, never raw hex, so both looks work everywhere.
+   Dark blocks exist twice (explicit attribute and OS preference) because CSS cannot share them.
+   ========================================================================== */
+
+/* ---- 1. Shared (look- and mode-independent) ------------------------------------------------ */
+:root {
+  /* 4/8px spacing grid */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+  --step: clamp(16px, 0.35vw + 15px, 17px);
+  --prose: 66ch;
+  --tap: 44px;                          /* minimum touch target */
+
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* unit accents beyond 6 are generated: set --unit-i (7, 8, ...) on the unit wrapper */
+  --unit-gen-l: 0.43;  --unit-gen-c: 0.12;
+}
+
+/* ---- 2. Papir, light (default) ------------------------------------------------------------ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --paper: #E9E6DF;
+  --surface: #DFDBD2;
+  --ink: #141B24;
+  --ink-2: #464F5C;
+  --ink-3: #4F5966;
+  --rule: #C8C3B7;
+  --rule-2: #B3AD9F;
+  --axis: #98A1AC;
+  --accent: #1F4E79;
+
+  --own: #7E4F17;       /* vlastiti primjer */
+  --own-bg: color-mix(in srgb, var(--own) 12%, var(--paper));
+  --none: #5D5D5D;      /* nema u materijalima */
+  --none-bg: color-mix(in srgb, var(--none) 9%, var(--paper));
+  --good: #1E6B4F;  --bad: #A32E28;  --warn: #8A5A00;
+
+  --unit-1: #1F4E79; --unit-2: #5C3D8F; --unit-3: #17614E;
+  --unit-4: #9A3B2F; --unit-5: #0F6674; --unit-6: #7A2148;
+  --unit-gen-l: 0.43;
+
+  /* progress: empty (gray track) -> 1 pass (yellow) -> target reached (green) */
+  --prog-track: #F8F6F1;
+  --prog-1: #E0A800;
+  --prog-2: #23784A;
+
+  --font-ui: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "STIX Two Text", Cambria, Georgia, "Times New Roman", serif;
+  --font-math: "STIX Two Text", Cambria, "Cambria Math", Georgia, serif;
+  --font-mono: "Cascadia Mono", "JetBrains Mono", Consolas, "Liberation Mono", monospace;
+  --radius: 3px;
+}
+
+/* ---- 3. Papir, dark ----------------------------------------------------------------------- */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #10151B;
+  --surface: #171D25;
+  --ink: #E8EAED;
+  --ink-2: #A3ABB6;
+  --ink-3: #8D96A2;
+  --rule: #2A323C;
+  --rule-2: #3A444F;
+  --axis: #59636F;
+  --accent: #7FB2E0;
+
+  --own: #D8A55E;
+  --own-bg: #231C10;
+  --none: #9AA0A6;
+  --none-bg: #1A1E22;
+  --good: #79C9AE;  --bad: #F0A69E;  --warn: #E2B463;
+
+  --unit-1: #7FB2E0; --unit-2: #BCA0EC; --unit-3: #79C9AE;
+  --unit-4: #E79A8C; --unit-5: #6FC7D3; --unit-6: #E58FB0;
+  --unit-gen-l: 0.80;  --unit-gen-c: 0.09;
+
+  --prog-track: #2A323C;
+  --prog-1: #F0C25A;
+  --prog-2: #2A9A5E;
+}
+
+/* ---- 3b. Derived tokens: recomputed on EVERY themed element ---------------------------------
+   Custom properties that contain var() resolve where they are declared, so a dark wrapper inside a
+   light page would inherit light values. Declaring them here, on :root and on any element with
+   data-theme or data-look, makes them follow whichever palette is active at that element.
+   Nacrt blocks below override --surface-2 and --accent-bg with their own values.
+   Wrappers should set BOTH data-look and data-theme. */
+:root,
+[data-theme],
+[data-look] {
+  --surface-2: color-mix(in srgb, var(--surface) 78%, var(--rule));
+  --accent-bg: color-mix(in srgb, var(--accent) 9%, var(--paper));
+  --prog-edge: var(--ink-2);
+  --heart: var(--bad);      /* favourites: hearts, count badge, the Favoriti tab */
+  --on-heart: var(--paper);
+  /* compare boxes: "doesn't work" (red) and "works" (green) panes; the header text carries the meaning, colour only helps */
+  --bad-bg: color-mix(in srgb, var(--bad) 9%, var(--paper));
+  --bad-edge: color-mix(in srgb, var(--bad) 45%, var(--paper));
+  --good-bg: color-mix(in srgb, var(--good) 9%, var(--paper));
+  --good-edge: color-mix(in srgb, var(--good) 45%, var(--paper));
+}
+
+/* ---- 4. Nacrt, light ---------------------------------------------------------------------- */
+[data-look="nacrt"] {
+  color-scheme: light;
+  --paper: #F2F4F6;
+  --surface: #FFFFFF;
+  --surface-2: #EAEDF1;
+  --ink: #101419;
+  --ink-2: #56606E;
+  --ink-3: #5F6977;
+  --rule: #D3D9E0;
+  --rule-2: #BFC7D1;
+  --axis: #8995A4;
+  --accent: #1F4B99;
+  --accent-bg: #E4EBF7;
+
+  --own: #8A5A00;
+  --own-bg: #FBF1DF;
+  --none: #56606E;
+  --none-bg: #EAEDF1;
+  --good: #1E6B4F;  --bad: #A32E28;  --warn: #8A5A00;
+
+  --unit-1: #1F4B99; --unit-2: #5C3D8F; --unit-3: #1E6B4F;
+  --unit-4: #A32E28; --unit-5: #0F6674; --unit-6: #7A2148;
+  --unit-gen-l: 0.43;  --unit-gen-c: 0.12;
+
+  --prog-track: #FFFFFF;
+  --prog-1: #E0A800;
+  --prog-2: #23784A;
+
+  --font-ui: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Cascadia Mono", "JetBrains Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  --font-math: "Cambria Math", "STIX Two Text", Cambria, Georgia, serif;
+  --radius: 4px;
+}
+[data-look="nacrt"][data-theme="light"] { color-scheme: light; }
+
+/* ---- 5. Nacrt, dark ----------------------------------------------------------------------- */
+[data-look="nacrt"][data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #0E1216;
+  --surface: #161B21;
+  --surface-2: #1D242C;
+  --ink: #E4E8ED;
+  --ink-2: #97A2B0;
+  --ink-3: #8794A3;
+  --rule: #2A323C;
+  --rule-2: #3A444F;
+  --axis: #5B6776;
+  --accent: #82A9E8;
+  --accent-bg: #18263C;
+
+  --own: #E2B463;
+  --own-bg: #241D0F;
+  --none: #97A2B0;
+  --none-bg: #1D242C;
+  --good: #8CD8B5;  --bad: #F0A69E;  --warn: #E2B463;
+
+  --unit-1: #82A9E8; --unit-2: #BCA0EC; --unit-3: #8CD8B5;
+  --unit-4: #F0A69E; --unit-5: #6FC7D3; --unit-6: #E58FB0;
+  --unit-gen-l: 0.80;  --unit-gen-c: 0.09;
+
+  --prog-track: #1D242C;
+  --prog-1: #F0C25A;
+  --prog-2: #2A9A5E;
+}
+
+/* ---- 6. Follow the OS when no explicit data-theme is set ----------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --paper: #10151B;
+    --surface: #171D25;
+    --ink: #E8EAED;
+    --ink-2: #A3ABB6;
+    --ink-3: #8D96A2;
+    --rule: #2A323C;
+    --rule-2: #3A444F;
+    --axis: #59636F;
+    --accent: #7FB2E0;
+
+    --own: #D8A55E;
+    --own-bg: #231C10;
+    --none: #9AA0A6;
+    --none-bg: #1A1E22;
+    --good: #79C9AE;  --bad: #F0A69E;  --warn: #E2B463;
+
+    --unit-1: #7FB2E0; --unit-2: #BCA0EC; --unit-3: #79C9AE;
+    --unit-4: #E79A8C; --unit-5: #6FC7D3; --unit-6: #E58FB0;
+    --unit-gen-l: 0.80;  --unit-gen-c: 0.09;
+
+    --prog-track: #2A323C;
+    --prog-1: #F0C25A;
+    --prog-2: #2A9A5E;
+  }
+  :root[data-look="nacrt"]:not([data-theme]) {
+    --paper: #0E1216;
+    --surface: #161B21;
+    --surface-2: #1D242C;
+    --ink: #E4E8ED;
+    --ink-2: #97A2B0;
+    --ink-3: #8794A3;
+    --rule: #2A323C;
+    --rule-2: #3A444F;
+    --axis: #5B6776;
+    --accent: #82A9E8;
+    --accent-bg: #18263C;
+
+    --own: #E2B463;
+    --own-bg: #241D0F;
+    --none: #97A2B0;
+    --none-bg: #1D242C;
+    --good: #8CD8B5;  --bad: #F0A69E;  --warn: #E2B463;
+
+    --unit-1: #82A9E8; --unit-2: #BCA0EC; --unit-3: #8CD8B5;
+    --unit-4: #F0A69E; --unit-5: #6FC7D3; --unit-6: #E58FB0;
+    --unit-gen-l: 0.80;  --unit-gen-c: 0.09;
+
+    --prog-track: #1D242C;
+    --prog-1: #F0C25A;
+    --prog-2: #2A9A5E;
+  }
+}
+
+/* ---- 7. Unit accent helpers (the reference's .lesson-N classes, renamed) -------------------- */
+.unit-1 { --accent: var(--unit-1); }
+.unit-2 { --accent: var(--unit-2); }
+.unit-3 { --accent: var(--unit-3); }
+.unit-4 { --accent: var(--unit-4); }
+.unit-5 { --accent: var(--unit-5); }
+.unit-6 { --accent: var(--unit-6); }
+/* units 7+: golden-angle hue so neighbours never look alike; lightness/chroma keep >= 4.5:1 on the paper */
+.unit-gen { --accent: oklch(var(--unit-gen-l) var(--unit-gen-c) calc(var(--unit-i, 7) * 137.508)); }
+[class*="unit-"] { --accent-bg: color-mix(in srgb, var(--accent) 9%, var(--paper)); }
+
+/* ---- 8. Progress bar (markup contract in DESIGN.md; render/progress.html) ------------------- */
+/* --frac = passes/target (0..1) sets the fill length (scaleX).
+   --blend = (passes-1)/(target-1) mixes yellow (first pass) to green (last pass); 1 when target is 1.
+   State is never colour alone: the text "n/m" and tick marks always accompany the bar. */
+.prog {
+  --frac: 0;
+  --blend: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+.prog-track {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  min-width: 5rem;
+  height: 0.7rem;
+  background: var(--prog-track);
+  border: 1px solid var(--prog-edge);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.prog-fill {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(var(--frac));       /* scale, not width: no layout work while it animates */
+  transform-origin: 0 50%;
+  background: color-mix(in oklab, var(--prog-2) calc(var(--blend) * 100%), var(--prog-1));
+  transition: transform var(--dur) var(--ease-out), background-color var(--dur) var(--ease-out);
+}
+.prog[data-state="done"] .prog-fill { background: var(--prog-2); }
+.prog[data-state="empty"] .prog-fill { transform: scaleX(0); }
+.prog-ticks {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+}
+.prog-ticks i {
+  flex: 1 1 0;
+  border-right: 1px solid color-mix(in srgb, var(--prog-edge) 70%, transparent);
+}
+.prog-ticks i:last-child { border-right: 0; }
+.prog-text { min-width: 2.4em; text-align: right; color: var(--ink); }
+@media (prefers-reduced-motion: reduce) {
+  .prog-fill { transition: none; }
+}
+
+/* ---- 9. Browser surfaces themed from the palette ------------------------------------------ */
+::selection { background: color-mix(in srgb, var(--accent) 28%, transparent); color: var(--ink); }
+:focus-visible { outline: var(--focus-width) solid var(--ink); outline-offset: var(--focus-offset); }

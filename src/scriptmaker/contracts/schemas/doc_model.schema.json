@@ -1,0 +1,268 @@
+{
+  "$defs": {
+    "BBox": {
+      "additionalProperties": false,
+      "description": "Normalised page coordinates, 0..1, origin top-left.",
+      "properties": {
+        "x0": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "X0",
+          "type": "number"
+        },
+        "x1": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "X1",
+          "type": "number"
+        },
+        "y0": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Y0",
+          "type": "number"
+        },
+        "y1": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Y1",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x0",
+        "y0",
+        "x1",
+        "y1"
+      ],
+      "title": "BBox",
+      "type": "object"
+    },
+    "Block": {
+      "additionalProperties": false,
+      "properties": {
+        "bbox": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BBox"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confidence": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Confidence"
+        },
+        "edited_by_user": {
+          "default": false,
+          "title": "Edited By User",
+          "type": "boolean"
+        },
+        "engine": {
+          "description": "e.g. textlayer, tesseract, rapidocr, gemini, manual",
+          "minLength": 1,
+          "title": "Engine",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "image_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "for figures: saved image, relative to data/",
+          "title": "Image Path"
+        },
+        "latex": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Latex"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/$defs/BlockType"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "text",
+        "engine"
+      ],
+      "title": "Block",
+      "type": "object"
+    },
+    "BlockType": {
+      "enum": [
+        "heading",
+        "paragraph",
+        "list",
+        "table",
+        "formula",
+        "figure",
+        "handwriting"
+      ],
+      "title": "BlockType",
+      "type": "string"
+    },
+    "Page": {
+      "additionalProperties": false,
+      "properties": {
+        "blocks": {
+          "items": {
+            "$ref": "#/$defs/Block"
+          },
+          "title": "Blocks",
+          "type": "array"
+        },
+        "image_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Rendered/cropped page image, relative to data/",
+          "title": "Image Path"
+        },
+        "n": {
+          "description": "1-based page number (image files are page 1)",
+          "minimum": 1,
+          "title": "N",
+          "type": "integer"
+        },
+        "needs_ocr": {
+          "default": false,
+          "description": "set by the per-page decision (step 2.2): no usable text layer",
+          "title": "Needs Ocr",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "n"
+      ],
+      "title": "Page",
+      "type": "object"
+    },
+    "SourceInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "path": {
+          "description": "Original path as imported",
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "reliability": {
+          "default": 3,
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Reliability",
+          "type": "integer"
+        },
+        "role": {
+          "$ref": "#/$defs/SourceRole",
+          "default": "unknown"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "unit_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit Id"
+        }
+      },
+      "required": [
+        "id",
+        "path",
+        "sha256"
+      ],
+      "title": "SourceInfo",
+      "type": "object"
+    },
+    "SourceRole": {
+      "enum": [
+        "questions",
+        "materials",
+        "exam_samples",
+        "notes",
+        "unknown"
+      ],
+      "title": "SourceRole",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "pages": {
+      "items": {
+        "$ref": "#/$defs/Page"
+      },
+      "title": "Pages",
+      "type": "array"
+    },
+    "source": {
+      "$ref": "#/$defs/SourceInfo"
+    },
+    "version": {
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "source"
+  ],
+  "title": "DocModel",
+  "type": "object"
+}

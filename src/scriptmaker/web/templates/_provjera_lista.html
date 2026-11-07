@@ -1,0 +1,103 @@
+{% if queue is none %}
+<div class="notice notice-error" role="alert">
+  <h2>Popis se nije učitao</h2>
+  <p>Aplikacija nije mogla složiti popis za provjeru. Tvoji podaci nisu promijenjeni. Pokušaj ponovno; ako se ponovi, pogledaj prozor u kojem je aplikacija pokrenuta.</p>
+  <button class="btn" type="button" data-retry>Pokušaj ponovno</button>
+</div>
+{% else %}
+{% set a = queue.analysis %}
+<p class="q-total" role="status">
+  {% if queue.total %}<b>Čeka: {{ queue.total }}</b> ({{ queue.pages|length }} {{ hr_plural(queue.pages|length, 'stranica', 'stranice', 'stranica') }}, {{ queue.exams|length }} {{ hr_plural(queue.exams|length, 'ispitna rečenica', 'ispitne rečenice', 'ispitnih rečenica') }})
+  {% else %}<b>Sve je provjereno.</b>{% endif %}
+</p>
+
+<section class="sec" aria-labelledby="q-pages">
+  <h2 id="q-pages">Stranice za pogledati ({{ queue.pages|length }})</h2>
+  {% if queue.pages %}
+  <p class="muted">Računalo nije sigurno da je dobro pročitalo ove stranice, ili je to rukopis. Otvori stranicu, ispravi riječi uz sliku i pritisni „Spremi i označi stranicu provjerenom”: tada ona izlazi iz ovog popisa.</p>
+  <p class="q-ai"><a class="btn" href="/predmet/{{ predmet_id }}/provjera/gemini">Pročitaj Geminijem…</a> <span class="muted">Neobavezno: Gemini napravi nacrt teksta, a ti ga provjeriš. Ništa se ne šalje bez tvoje potvrde.</span></p>
+  <ul class="q-list">
+    {% for item in queue.pages %}
+    <li class="q-item">
+      <span class="q-name">{{ item.label }}, str. {{ item.page }}</span>
+      <span class="muted q-reason">{{ item.reason }}</span>
+      <a class="btn" href="/predmet/{{ predmet_id }}/izvor/{{ item.source_pk }}/stranica/{{ item.page }}/ispravi">Ispravi tekst</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">Nema stranica koje čekaju.</p>{% endif %}
+</section>
+
+<section class="sec" aria-labelledby="q-exams">
+  <h2 id="q-exams">Ispitne rečenice ({{ queue.exams|length }})</h2>
+  <div class="q-how">
+    {% if a.mode == 'typed' %}
+    <p>Ispiti se broje iz tipkanog teksta: <b>{{ a.used|join(', ') }}</b>.{% if a.pictures %} Tekst očitan s {{ a.pictures }} {{ hr_plural(a.pictures, 'fotografije', 'fotografija', 'fotografija') }} ispita ne broji se zasebno, da se isti listić ne bi brojao dvaput.{% endif %}</p>
+    {% elif a.mode == 'photos' %}
+    <p>Ispiti se broje iz teksta koji je računalo pročitalo s <b>{{ a.used|length }}</b> {{ hr_plural(a.used|length, 'fotografije', 'fotografija', 'fotografija') }}. Tipkani prepis (kao tvoj slikke.txt: „### Slika 1” i ispod toga pitanja) daje puno bolje brojanje: zalijepi ga niže ili stavi .txt u mapu s ispitima.</p>
+    {% else %}
+    <p>Nema datoteka s ulogom „Primjeri ispita”. Uloga se bira pri uvozu; ili zalijepi tipkani ispitni tekst niže.</p>
+    {% endif %}
+    {% if a.mode != 'none' %}<p class="muted">Različitih listića: {{ a.sheets }}. Različitih ispitnih pitanja: {{ a.questions }}.{% if a.ignored %} Nisu listići i nisu brojani: {{ a.ignored|join(', ') }}.{% endif %}</p>{% endif %}
+  </div>
+
+  {% if queue.exams %}
+  <p class="muted">Ove rečenice nisu slične nijednom tvom pitanju, pa aplikacija ne zna gdje ih brojati. Odaberi pitanje kojem pripadaju, ili „Ne broji” ako nisu ispitno pitanje (naslov, bilješka).</p>
+  <ul class="q-list">
+    {% for item in queue.exams %}
+    <li class="q-item q-exam">
+      <p class="q-wording">„{{ item.text }}”</p>
+      <p class="muted">{{ item.source }}</p>
+      <form method="post" action="/predmet/{{ predmet_id }}/provjera/ispit/smjesti" class="q-place">
+        <input type="hidden" name="source" value="{{ item.source }}">
+        <input type="hidden" name="text" value="{{ item.text }}">
+        <label class="field"><span>Pripada pitanju</span>
+          <select name="question" required>
+            <option value="" disabled selected>Odaberi pitanje</option>
+            {% if item.suggestions %}<optgroup label="Najsličnija">
+              {% for qid, qtext, unit in item.suggestions %}<option value="{{ qid }}">{{ unit }}. {{ qtext }}</option>{% endfor %}
+            </optgroup>{% endif %}
+            {% for unit_no, rows in questions|groupby(0) %}
+            <optgroup label="{{ unit_no }}. {{ rows[0][1] }}">
+              {% for _u, _t, qid, no, qtext in rows %}<option value="{{ qid }}">{{ no }}. {{ qtext }}</option>{% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select></label>
+        <div class="q-buttons">
+          <button class="btn btn-primary" type="submit">Smjesti</button>
+          <button class="btn" type="submit" formnovalidate formaction="/predmet/{{ predmet_id }}/provjera/ispit/ne-broji">Ne broji</button>
+        </div>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif a.mode != 'none' %}<p class="muted">Nema ispitnih rečenica koje čekaju.</p>{% endif %}
+
+  <details class="rv-box">
+    <summary>Zalijepi tipkani ispitni tekst</summary>
+    <form method="post" action="/predmet/{{ predmet_id }}/provjera/ispit/zalijepi">
+      <label class="field"><span>Za svaku sliku ispita jedan blok: redak „### Slika 1”, ispod njega pitanja. Kad postoji tipkani tekst, koristi se umjesto teksta očitanog s fotografija.</span>
+        <textarea name="text" rows="10" maxlength="60000">{{ pasted }}</textarea></label>
+      <button class="btn btn-primary" type="submit">Spremi i ponovno izračunaj</button>
+    </form>
+  </details>
+
+  {% if decided %}
+  <details class="rv-box">
+    <summary>Već riješeno ({{ decided|length }})</summary>
+    <ul class="q-list q-done">
+      {% for m in decided %}
+      <li class="q-item">
+        <p class="q-wording">„{{ m.text }}”</p>
+        <p class="muted">{{ m.source }}: {% if m.question_id %}smješteno uz pitanje {{ m.question_id }}{% else %}ne broji se{% endif %}</p>
+        <form method="post" action="/predmet/{{ predmet_id }}/provjera/ispit/vrati">
+          <input type="hidden" name="source" value="{{ m.source }}"><input type="hidden" name="text" value="{{ m.text }}">
+          <button class="btn" type="submit">Vrati u red</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+</section>
+{% endif %}

@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% macro unit_select(name, units, current=none, auto_label='') %}
+<select name="{{ name }}"{% if not auto_label %} required{% endif %}>
+  {% if auto_label %}<option value="">{{ auto_label }}</option>{% endif %}
+  {% for no, title in units %}<option value="{{ no }}"{% if no == current %} selected{% endif %}>{{ no }}. {{ title }}</option>{% endfor %}
+</select>
+{% endmacro %}
+{% macro question_item(q) %}
+<li>
+  <a href="/predmet/{{ predmet.id }}/pregled?q={{ q.id }}"{% if current and q.id == current.id %} aria-current="true"{% endif %}>
+    <span class="st st-{{ q.status }}" aria-hidden="true"></span>
+    <span class="visually-hidden">{{ status_words[q.status] }}: </span>
+    <span class="rv-no">{{ q.no }}.</span>
+    <span class="rv-text">{{ q.text }}</span>
+  </a>
+</li>
+{% endmacro %}
+{% macro hidden(c, current, action) %}
+<input type="hidden" name="action" value="{{ action }}">
+<input type="hidden" name="file" value="{{ c.page.label }}">
+<input type="hidden" name="page" value="{{ c.page.n }}">
+<input type="hidden" name="kand" value="{{ c.rank }}">
+{% endmacro %}
+{% block page_class %} page-wide{% endblock %}
+{# keys move between questions here many times a day: no fade between pages #}
+{% block page_transition %}{% endblock %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}">{{ predmet.name }}</a> · <a href="/predmet/{{ predmet.id }}/provjera">Za provjeru</a></p>
+<div class="page-head">
+  <h1>Pregled pitanja</h1>
+  {% if total %}
+  <p class="rv-progress" role="status">
+    <b>{{ reviewed }}</b> od <b>{{ total }}</b> {{ hr_plural(total, 'pitanja', 'pitanja', 'pitanja') }} pregledano
+    <span class="bar rv-bar" role="progressbar" aria-label="Pregledana pitanja" aria-valuemin="0" aria-valuemax="{{ total }}" aria-valuenow="{{ reviewed }}"><span class="bar-fill" style="--frac: {{ '%.4f'|format(reviewed / total) }}"></span></span>
+  </p>
+  {% endif %}
+</div>
+
+{% if info %}<p class="notice-line" role="status">{{ info }}</p>{% endif %}
+{% if error and not current %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+
+{% macro add_tools() %}
+<section class="rv-add" aria-labelledby="rv-add-h">
+  <h2 id="rv-add-h">Dodaj pitanja</h2>
+  <form method="post" action="/predmet/{{ predmet.id }}/pitanja/ucitaj" class="rv-load">
+    <button class="btn" type="submit">Učitaj pitanja iz datoteka</button>
+    <span class="muted">Čita datoteke s ulogom Pitanja. Fotografije rukopisa daju grub nacrt koji ispravljaš. Što si već uredio ili odlučio ostaje.</span>
+  </form>
+  <details class="rv-box">
+    <summary>Zalijepi pitanja</summary>
+    <form method="post" action="/predmet/{{ predmet.id }}/pitanja/zalijepi">
+      <label class="field"><span>Popis pitanja (jedno pod drugim; redak „(5.)” počinje cjelinu 5)</span>
+        <textarea name="text" rows="8" required maxlength="60000"></textarea></label>
+      <label class="field"><span>Cjelina</span>{{ unit_select('unit', units, none, 'Prema oznakama u tekstu, inače prva cjelina') }}</label>
+      <label class="check"><input type="checkbox" name="replace" checked> Zamijeni nacrte iz fotografija u tim cjelinama (ono što si uredio ili odlučio ostaje)</label>
+      <button class="btn btn-primary" type="submit">Dodaj pitanja</button>
+    </form>
+  </details>
+  <details class="rv-box">
+    <summary>Dodaj jedno pitanje</summary>
+    <form method="post" action="/predmet/{{ predmet.id }}/pitanja/novo">
+      <label class="field"><span>Pitanje</span><input type="text" name="text" required maxlength="600" autocomplete="off"></label>
+      <label class="field"><span>Cjelina</span>{{ unit_select('unit', units) }}</label>
+      <button class="btn" type="submit">Dodaj</button>
+    </form>
+  </details>
+</section>
+{% endmacro %}
+
+{% if not questions %}
+<div class="notice">
+  <h2>Još nema pitanja</h2>
+  <p>Pitanja dolaze iz datoteka s popisom pitanja ili iz popisa koji zalijepiš. Zatim za svako pitanje aplikacija predloži stranicu i odlomak iz tvog gradiva, a ti potvrdiš, urediš ili kažeš da odgovora nema.</p>
+  {% if not units %}<p><b>Predmet nema cjelina.</b> Cjeline nastaju pri uvozu mape.</p>{% endif %}
+</div>
+{{ add_tools() }}
+{% else %}
+<div class="review" data-review data-predmet="{{ predmet.id }}">
+  <nav class="rv-list" aria-label="Popis pitanja">
+    {% for no, title, rows in groups %}
+    <details class="rv-unit" style="--unit: var(--unit-{{ (no - 1) % 6 + 1 }})"{% if current and current.unit_no == no %} open{% endif %}>
+      <summary>
+        <span class="rv-unit-name"><b>{{ no }}.</b> {{ title }}</span>
+        <span class="muted rv-count">{{ rows|rejectattr('status', 'equalto', 'open')|list|length }}/{{ rows|length }}</span>
+      </summary>
+      <ul>
+        {% for q in rows if not q.doubtful %}{{ question_item(q) }}{% endfor %}
+      </ul>
+      {% set doubtful = rows|selectattr('doubtful')|list %}
+      {% if doubtful %}
+      <details class="rv-doubt"{% if current and current.doubtful and current.unit_no == no %} open{% endif %}>
+        <summary>Vjerojatno nisu pitanja ({{ doubtful|length }})</summary>
+        <ul>{% for q in doubtful %}{{ question_item(q) }}{% endfor %}</ul>
+      </details>
+      {% endif %}
+    </details>
+    {% endfor %}
+    <ul class="state-legend rv-legend">
+      <li><span class="st st-open" aria-hidden="true"></span>nije pregledano</li>
+      <li><span class="st st-verbatim" aria-hidden="true"></span>doslovno</li>
+      <li><span class="st st-own" aria-hidden="true"></span>vlastiti primjer</li>
+      <li><span class="st st-none" aria-hidden="true"></span>nema u materijalima</li>
+    </ul>
+  </nav>
+
+  <section class="rv-main" aria-labelledby="rv-q">
+    <p class="muted rv-where">{{ current.unit_no }}. {{ current_unit_title }} · pitanje {{ current.no }}</p>
+    <h2 id="rv-q">{{ current.text }}</h2>
+    <p class="rv-tags">
+      {% if current.draft %}<span class="tag tag-warn">Nacrt iz fotografije: provjeri riječi</span>{% endif %}
+      {% if current.edited %}<span class="tag">Ispravio si</span>{% endif %}
+      {% if 'guess' in current.flags %}<span class="tag tag-warn">Pisac nije siguran u riječ</span>{% endif %}
+      {% if 'struck' in current.flags %}<span class="tag">Na papiru prekriženo</span>{% endif %}
+      {% if 'unit_guess' in current.flags %}<span class="tag tag-warn">Cjelina nije sigurna</span>{% endif %}
+      {% if 'list_split' in current.flags %}<span class="tag">Izdvojeno iz popisa</span>{% endif %}
+      {% if current.source_file %}<span class="muted">Iz: {{ current.source_file }}{% if current.source_page %}, str. {{ current.source_page }}{% endif %}</span>
+      {% if list_source and current.source_page %}<a class="rv-fix" href="/predmet/{{ predmet.id }}/izvor/{{ list_source.id }}/stranica/{{ current.source_page }}/ispravi">Ispravi tekst te stranice</a>{% endif %}{% endif %}
+    </p>
+
+    <details class="rv-box rv-edit">
+      <summary>Uredi pitanje</summary>
+      <form method="post" action="/predmet/{{ predmet.id }}/pitanja/{{ current.id }}/uredi">
+        <label class="field"><span>Tekst pitanja</span><input type="text" name="text" value="{{ current.text }}" required maxlength="600" autocomplete="off"></label>
+        <label class="field"><span>Cjelina</span>{{ unit_select('unit', units, current.unit_no) }}</label>
+        <button class="btn btn-primary" type="submit">Spremi pitanje</button>
+      </form>
+      <form method="post" action="/predmet/{{ predmet.id }}/pitanja/{{ current.id }}/obrisi" data-confirm="Obrisati ovo pitanje i njegov odgovor?">
+        <button class="btn" type="submit">Obriši pitanje</button>
+      </form>
+    </details>
+
+    {% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+
+    {% if saved %}
+    <div class="rv-saved rv-saved-{{ saved.status }}">
+      <p><b>{{ status_words[saved.status]|capitalize }}</b>{% if saved.file %} · {{ saved.file }}, str. {{ saved.page }}{% endif %}</p>
+      {% if saved.text %}<blockquote>{{ saved.text }}</blockquote>{% endif %}
+      <form method="post" action="/predmet/{{ predmet.id }}/pitanja/{{ current.id }}/odgovor">
+        <input type="hidden" name="action" value="reset">
+        <button class="btn" type="submit">Poništi odluku</button>
+      </form>
+    </div>
+    {% endif %}
+    {% if ai %}{% include "_claude_ai.html" %}{% endif %}
+
+    <h3>Predložene stranice</h3>
+    {% if not candidates %}
+    <p class="muted">Za ovo pitanje nisam našao stranicu u gradivu. Možeš napisati vlastiti primjer ili označiti da odgovora nema.</p>
+    {% endif %}
+    {% for c in candidates %}
+    <article class="cand{% if selected and c.rank == selected.rank %} is-selected{% endif %}" data-rank="{{ c.rank }}"
+      {% if c.page.image_path %}data-image="/predmet/{{ predmet.id }}/stranica/{{ c.page.source_pk }}/{{ c.page.n }}"{% endif %}>
+      <header class="cand-head">
+        <a class="cand-pick" href="/predmet/{{ predmet.id }}/pregled?q={{ current.id }}&amp;kand={{ c.rank }}"{% if selected and c.rank == selected.rank %} aria-current="true"{% endif %}>
+          <b>{{ c.rank }}.</b> {{ c.page.label }}, str. {{ c.page.n }}</a>
+        <span class="tag">{{ role_labels.get(c.page.role, 'Nepoznato') }}</span>
+        <span class="muted">pouzdanost {{ c.page.reliability }} od 5</span>
+        {% if c.page.handwritten %}<span class="tag tag-warn">Rukopis: nacrt</span>{% endif %}
+        <a class="rv-fix" href="/predmet/{{ predmet.id }}/izvor/{{ c.page.source_pk }}/stranica/{{ c.page.n }}/ispravi">Ispravi tekst stranice</a>
+      </header>
+      {% if c.page.handwritten %}<p class="muted cand-note">Ovo je strojno čitanje rukopisa. Pogledaj sliku stranice prije nego što prihvatiš.</p>{% endif %}
+      <div class="cand-text" tabindex="0" aria-label="Tekst stranice; označeno je predloženo">{{ c.before }}{% if c.suggested %}<mark class="sug">{{ c.suggested }}</mark>{% endif %}{{ c.after }}</div>
+      <div class="cand-actions">
+        {% if c.suggested %}
+        <form method="post" action="/predmet/{{ predmet.id }}/pitanja/{{ current.id }}/odgovor">
+          {{ hidden(c, current, 'verbatim') }}
+          <input type="hidden" name="quote" value="{{ c.suggested }}">
+          <button class="btn btn-primary" type="submit" data-act="accept">Prihvati kao doslovno <kbd>A</kbd></button>
+        </form>
+        {% else %}
+        <p class="muted">Na ovoj stranici nema predloženog odlomka. Označi tekst ili ga uredi.</p>
+        {% endif %}
+        <details class="cand-edit"{% if typed and typed.action == 'verbatim' and typed.file == c.page.label %} open{% endif %}>
+          <summary>Uredi <kbd>E</kbd></summary>
+          <form method="post" action="/predmet/{{ predmet.id }}/pitanja/{{ current.id }}/odgovor">
+            {{ hidden(c, current, 'verbatim') }}
+            <label class="field"><span>Tekst koji stoji na stranici (skrati ga ili označi drugi dio stranice mišem)</span>
+              <textarea name="quote" rows="6">{% if typed and typed.action == 'verbatim' and typed.file == c.page.label %}{{ typed.quote }}{% else %}{{ c.suggested }}{% endif %}</textarea></label>
+            <button class="btn btn-primary" type="submit">Prihvati ovaj tekst</button>
+          </form>
+        </details>
+      </div>
+    </article>
+    {% endfor %}
+
+    <div class="rv-other">
+      <details class="cand-edit own-edit"{% if typed and typed.action == 'own' %} open{% endif %}>
+        <summary>Vlastiti primjer <kbd>O</kbd></summary>
+        <form method="post" action="/predmet/{{ predmet.id }}/pitanja/{{ current.id }}/odgovor">
+          <input type="hidden" name="action" value="own">
+          <label class="field"><span>Tvoj primjer ili objašnjenje (u skripti je označeno kao tvoje, ne iz gradiva)</span>
+            <textarea name="own_text" rows="5" required>{% if typed and typed.action == 'own' %}{{ typed.own_text }}{% elif saved and saved.status == 'own' %}{{ saved.text }}{% endif %}</textarea></label>
+          <button class="btn btn-primary" type="submit">Spremi kao vlastiti primjer</button>
+        </form>
+      </details>
+      <form method="post" action="/predmet/{{ predmet.id }}/pitanja/{{ current.id }}/odgovor">
+        <input type="hidden" name="action" value="none">
+        <button class="btn" type="submit" data-act="none">Nema u materijalima <kbd>N</kbd></button>
+      </form>
+    </div>
+    <p class="muted rv-keys">Tipke: <kbd>A</kbd> prihvati · <kbd>E</kbd> uredi · <kbd>O</kbd> vlastiti primjer · <kbd>N</kbd> nema u materijalima · <kbd>↑</kbd> <kbd>↓</kbd> druga pitanja · <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> druga stranica</p>
+    {% if next_open %}<p><a class="btn" href="/predmet/{{ predmet.id }}/pregled?q={{ next_open }}">Sljedeće nepregledano</a></p>{% endif %}
+  </section>
+
+  <aside class="rv-page" aria-label="Slika stranice">
+    {% if selected and selected.page.image_path %}
+    <div class="zoom-bar" role="group" aria-label="Povećanje slike">
+      <button class="btn" type="button" data-zoom="out" aria-label="Smanji sliku">−</button>
+      <button class="btn" type="button" data-zoom="fit">Cijela stranica</button>
+      <button class="btn" type="button" data-zoom="in" aria-label="Povećaj sliku">+</button>
+    </div>
+    <div class="zoom-box" tabindex="0" aria-label="Slika stranice, može se pomicati">
+      <img id="rv-img" src="/predmet/{{ predmet.id }}/stranica/{{ selected.page.source_pk }}/{{ selected.page.n }}"
+        alt="Stranica {{ selected.page.n }} datoteke {{ selected.page.label }}">
+    </div>
+    {% elif selected %}
+    <p class="muted">Za ovu stranicu nema slike: tekst je uzet izravno iz datoteke.</p>
+    {% else %}
+    <p class="muted">Kad se pronađe stranica, ovdje se vidi njezina slika.</p>
+    {% endif %}
+  </aside>
+</div>
+{{ add_tools() }}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/review.js" defer></script>
+{% endblock %}

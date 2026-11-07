@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "predmet": "Primjer predmet",
+  "title": "Pitanja i odgovori s ispita",
+  "subtitle": "Sintetički primjer: izmišljeni listići i dojave, samo za testove",
+  "lang": "hr",
+  "preferences": {"template": "qa", "theme": "papir", "strictness": "verbatim_and_own", "focus": "all"},
+  "units": [
+    {
+      "id": "u1", "no": 1, "title": "Izometrije ravnine", "accent_index": 1,
+      "description": "Pitanja s izmišljenog lista „1. IZOMETRIJA”.",
+      "exam_description": "Na listićima zadatak 1. Listić A: osna simetrija. Listić B: inverz.",
+      "groups": [
+        {"title": "a) Definicije", "items": [
+          {"id": "u1q1", "no": 1, "question": "Definirajte osnu simetriju.", "status": "verbatim",
+           "answer_blocks": [
+             {"kind": "text", "text": "Osna simetrija s obzirom na pravac $p$ je preslikavanje ravnine koje svakoj točki $T$ pridružuje točku $T'$."},
+             {"kind": "formula", "text": "|TN| = |T'N|"},
+             {"kind": "hint", "caption": "Rješenje točaka", "text": "Uvrsti vrijednost u formulu i izračunaj $f(x)$.\n\nPar $(x, f(x))$ je jedna točka grafa."}
+           ],
+           "source": {"file": "Materijali/skripta_primjer.pdf", "page": 1, "quote": "Osna simetrija s obzirom na pravac p je preslikavanje ravnine"}},
+          {"id": "u1q2", "no": 2, "question": "Navedi primjer osno simetričnog lika.", "status": "own",
+           "answer_blocks": [{"kind": "text", "text": "Jednakokračan trokut: os simetrije je simetrala osnovice."}]},
+          {"id": "u1q3", "no": 3, "question": "Definirajte inverziju.", "status": "none"},
+          {"id": "u1q5", "no": 4, "question": "Definirajte translaciju.", "status": "verbatim",
+           "answer_blocks": [{"kind": "text", "text": "Translacija je izometrija koja svaku točku pomiče za isti vektor."}],
+           "source": {"file": "Materijali/skripta_primjer.pdf", "page": 2, "quote": "Translacija je izometrija koja svaku točku pomiče"}}
+        ]},
+        {"title": "b) Svojstva", "items": [
+          {"id": "u1q4", "no": 5, "question": "Nabrojite svojstva rotacije.", "status": "verbatim",
+           "answer_blocks": [{"kind": "list", "items": ["čuva udaljenosti", "čuva kutove", "čuva orijentaciju"]}],
+           "source": {"file": "Bilješke/stranica_2.jpeg", "page": 1, "quote": "Rotacija je izometrija.", "handwritten": true}},
+          {"id": "u1q6", "no": 6, "question": "Izračunajte kompoziciju $s_p \\circ s_p$.", "status": "own",
+           "answer_blocks": [
+             {"kind": "text", "text": "Kompozicija osne simetrije sa samom sobom je identiteta."},
+             {"kind": "hint", "caption": "Podsjetnik", "text": "Svaka točka se dvaput zrcali preko istog pravca i vraća se na početno mjesto."}
+           ]}
+        ]}
+      ]
+    },
+    {
+      "id": "u2", "no": 2, "title": "Kompleksni brojevi", "accent_index": 2,
+      "exam_description": "Na listićima zadatak 2.",
+      "groups": [
+        {"title": "a) Definicije", "items": [
+          {"id": "u2q1", "no": 1, "question": "Definirajte skup $\\mathbb{C}$.", "status": "verbatim",
+           "answer_blocks": [{"kind": "text", "text": "$\\mathbb{C} = \\{a + bi : a, b \\in \\mathbb{R}\\}$"}],
+           "source": {"file": "Materijali/skripta_primjer.pdf", "page": 5, "quote": "Skup kompleksnih brojeva"}}
+        ]},
+        {"title": "b) Računski zadaci", "items": [
+          {"id": "u2q2", "no": 2, "question": "Odredite inverz broja $z = a + bi$, $z \\neq 0$.", "status": "own",
+           "answer_blocks": [{"kind": "formula", "text": "z^{-1} = \\frac{a - bi}{a^2 + b^2}"}]},
+          {"id": "u2q3", "no": 3, "question": "Je li $(\\mathbb{C}, +)$ komutativna grupa?", "status": "verbatim",
+           "answer_blocks": [{"kind": "text", "text": "Da, zbrajanje je asocijativno i komutativno, nula je neutralni element."}],
+           "source": {"file": "Materijali/skripta_primjer.pdf", "page": 6, "quote": "zbrajanje je asocijativno i komutativno"}}
+        ]}
+      ]
+    }
+  ],
+  "exams": {
+    "intro": "Pitanja s izmišljenih ispitnih listića i poruka kolega.",
+    "sources": [
+      {"code": "LA", "label": "Listić A", "kind": "sheet"},
+      {"code": "LB", "label": "Listić B", "kind": "sheet"},
+      {"code": "D1", "label": "Dojava 1", "kind": "report"},
+      {"code": "D2", "label": "Dojava 2", "kind": "report"},
+      {"code": "D3", "label": "Dojava 3", "kind": "report"}
+    ],
+    "method_note": "Svaki izvor broji se najviše jednom po pitanju.\n\nDojave su prepričavanja po sjećanju, pa je formulacija pitanja uređena.",
+    "questions": [
+      {"id": "e1", "unit_id": "u1", "text": "Definirajte osnu simetriju.", "item_ids": ["u1q1"],
+       "sources": [{"source": "LA", "text": "Definirajte osnu simetriju."}, {"source": "LB", "text": "Def osne simetrije"},
+                   {"source": "D1", "text": "osna sim"}, {"source": "D2", "text": "osna <i>simetrija</i>"}, {"source": "D3", "text": "osna"}]},
+      {"id": "e2", "unit_id": "u1", "text": "Definirajte inverziju.", "item_ids": ["u1q3"],
+       "sources": [{"source": "LB", "text": "Definirajte inverziju."}, {"source": "D1", "text": "inverzija"}]},
+      {"id": "e3", "unit_id": "u1", "text": "Nabrojite svojstva rotacije.", "item_ids": ["u1q4"],
+       "sources": [{"source": "LA", "text": "Svojstva rotacije."}, {"source": "D2", "text": "rotacija svojstva"}, {"source": "D3", "text": "rotacija"}]},
+      {"id": "e4", "unit_id": "u1", "text": "Navedite primjer osno simetričnog lika.", "item_ids": ["u1q2"],
+       "sources": [{"source": "D1", "text": "primjer osno simetricnog lika"}]},
+      {"id": "e5", "unit_id": "u1", "text": "Osnosimetričan skup: što je i primjer figura.", "item_ids": [],
+       "sources": [{"source": "D3", "text": "Osnosimetrican skup sta je"}]},
+      {"id": "e6", "unit_id": "u1", "text": "Definirajte rotaciju i translaciju.", "item_ids": ["u1q4", "u1q5"],
+       "sources": [{"source": "LA", "text": "Definirajte rotaciju."}, {"source": "LB", "text": "translacija"},
+                   {"source": "D1", "text": "rotacija i translacija"}, {"source": "D2", "text": "translacija def"}]},
+      {"id": "e7", "unit_id": "u2", "text": "Definirajte skup $\\mathbb{C}$.", "item_ids": ["u2q1"],
+       "sources": [{"source": "LA", "text": "Definirajte skup $\\mathbb{C}$."}, {"source": "LB", "text": "skup C"}]},
+      {"id": "e8", "unit_id": "u2", "text": "Odredite inverz kompleksnog broja.", "item_ids": ["u2q2"],
+       "sources": [{"source": "LA", "text": "Odredite inverz od $z = a + bi$."}, {"source": "D1", "text": "inverz od z"}]},
+      {"id": "e9", "unit_id": "u2", "text": "Je li $(\\mathbb{C}, +)$ komutativna grupa?", "item_ids": ["u2q3"],
+       "sources": [{"source": "LB", "text": "Je li (C, +) komutativna grupa?"}]}
+    ]
+  }
+}

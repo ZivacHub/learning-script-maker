@@ -1,0 +1,5 @@
+{% if result %}
+<p class="veza {{ 'veza-ok' if result.ok else 'veza-bad' }}" role="status"><span class="veza-shape" aria-hidden="true">{{ '✓' if result.ok else '✕' }}</span>
+  {{ result.message }}{% if result.ok and result.text %} Model je odgovorio: „{{ result.text }}”.{% endif %}</p>
+{% if not result.ok and result.detail %}<p class="muted veza-detail">Google kaže: <code>{{ result.detail }}</code></p>{% endif %}
+{% endif %}

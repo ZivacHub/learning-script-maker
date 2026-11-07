@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}">{{ predmet.name }}</a></p>
+<div class="page-head">
+  <h1>Neka Claude predloži odgovore</h1>
+</div>
+<p class="lead">Neobavezna pomoć: skripta se može napraviti i bez ovoga. Aplikacija složi mapu s pitanjima i tekstom tvojih materijala, Claude u nju upiše prijedloge, a aplikacija provjeri svaki citat prije nego išta spremi.</p>
+{% if error %}<div class="notice notice-error" role="alert"><p>{{ error }}</p></div>{% endif %}
+
+<section class="sec" aria-labelledby="h-kako">
+  <h2 id="h-kako">Kako ide</h2>
+  <ol class="steps">
+    <li><b>Označi cjeline</b> niže i pritisni „Napravi paket”. Označi sve za cijeli predmet, ili samo jednu cjelinu.</li>
+    <li><b>Reci Claudeu</b> (u Claude Code razgovoru) da otvori tu mapu i slijedi <code>JOB.md</code>. On upiše datoteku <code>answers.json</code> u istu mapu.</li>
+    <li><b>Vrati se ovdje</b> i pritisni „Uvezi odgovore”. Što prođe provjeru sprema se kao „Claudeov odabir” (možeš ga promijeniti), a što ne prođe dobiješ na popisu s razlogom. Odgovori s rukom pisanih stranica čekaju tvoj OK.</li>
+  </ol>
+</section>
+
+<section class="sec" aria-labelledby="h-rukopis">
+  <h2 id="h-rukopis">Odgovori s rukopisa</h2>
+  <form method="post" action="/predmet/{{ predmet.id }}/claude/rukopis">
+    <fieldset class="pref-group">
+      <legend>Što se dogodi kad Claude nađe odgovor samo na rukom pisanoj stranici</legend>
+      <label class="pref-choice"><input type="radio" name="nacin" value="wait"{% if handwriting == 'wait' %} checked{% endif %}>
+        <span class="pref-text"><b>Čeka moj OK</b><span class="muted">Odgovor čeka na popisu dok ga ne potvrdiš uz sliku stranice.</span></span></label>
+      <label class="pref-choice"><input type="radio" name="nacin" value="auto"{% if handwriting == 'auto' %} checked{% endif %}>
+        <span class="pref-text"><b>Spremi odmah, s oznakom</b><span class="muted">Odgovor se sprema odmah. U skripti piše „iz rukopisa, nije provjereno”, pa ga vidiš kad čitaš.</span></span></label>
+    </fieldset>
+    <button class="btn" type="submit">Spremi</button>
+  </form>
+</section>
+
+<section class="sec" aria-labelledby="h-nova">
+  <h2 id="h-nova">Novi paket</h2>
+  {% if not rows %}
+  <p class="muted">Predmet nema cjelina.</p>
+  {% else %}
+  <form method="post" action="/predmet/{{ predmet.id }}/claude">
+    <fieldset class="consent-pages">
+      <legend>Koje cjeline idu u paket</legend>
+      <ul>
+        {% for r in rows %}
+        <li><label class="check"><input type="checkbox" name="cjelina" value="{{ r.no }}"{% if r.no in ticked %} checked{% endif %}{% if not r.waiting %} disabled{% endif %}>
+          {{ r.no }}. {{ r.title }}
+          <span class="muted">{% if r.waiting %}{{ r.waiting }} {{ hr_plural(r.waiting, 'pitanje čeka', 'pitanja čekaju', 'pitanja čeka') }} odgovor{% else %}nema pitanja koja čekaju{% endif %}</span></label></li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    <p class="muted">U paket ide tekst svih materijala i bilješki tih cjelina (i slike stranica koje čekaju provjeru), a pitanja koja već imaju tvoj odgovor ne idu. Mapa ostaje na tvom računalu; Claude je čita kad mu kažeš gdje je.</p>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Napravi paket</button>
+    </div>
+  </form>
+  {% endif %}
+</section>
+
+{% if waiting %}
+<section class="sec" aria-labelledby="h-ceka">
+  <h2 id="h-ceka">Čeka tvoj OK</h2>
+  <p><a class="btn" href="/predmet/{{ predmet.id }}/claude/cekaju">{{ waiting }} {{ hr_plural(waiting, 'prijedlog s rukopisa', 'prijedloga s rukopisa', 'prijedloga s rukopisa') }}</a></p>
+</section>
+{% endif %}
+
+{% if packs %}
+<section class="sec" aria-labelledby="h-stari">
+  <h2 id="h-stari">Dosadašnji paketi</h2>
+  <ul class="q-list">
+    {% for p in packs %}
+    <li class="q-item">
+      <span class="q-name">Paket {{ p.job_id }} od {{ hr_date(p.created.date()) }}: {{ p.questions }} {{ hr_plural(p.questions, 'pitanje', 'pitanja', 'pitanja') }}</span>
+      <span class="muted q-reason">{% if p.report %}{% if p.report.error %}uvoz nije uspio{% else %}spremljeno {{ p.report.saved }}, čeka OK {{ p.report.waiting }}, ne prolazi {{ p.report.failures|length }}{% endif %}{% elif p.has_answers %}odgovori su stigli, još nisu uvezeni{% else %}čeka Claudeove odgovore{% endif %}</span>
+      <a class="btn" href="/predmet/{{ predmet.id }}/claude/posao/{{ p.job_id }}">Otvori</a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

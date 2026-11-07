@@ -1,0 +1,31 @@
+# secrets / local state
+.env
+.env.*
+!.env.example
+settings.local.json
+.unlazy/
+data/
+jobs/*/
+!jobs/.gitkeep
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# study materials and archives (private, other people's work)
+*.rar
+*.zip
+tests/_real/
+
+# OS / editor
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
+
+# playwright-cli session scratch
+.playwright-cli/

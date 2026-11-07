@@ -1,0 +1,34 @@
+{% macro card(c, controls=true) %}
+  <li>
+    <article class="subject{% if not c.active %} is-inactive{% endif %}" aria-labelledby="subject-{{ c.id }}">
+      <div class="subject-top">
+        <h2 id="subject-{{ c.id }}"><a class="subject-link" href="/predmet/{{ c.id }}">{{ c.name }}</a></h2>
+        {% if not c.active %}<span class="tag">Neaktivan</span>{% endif %}
+      </div>
+      <p class="subject-meta">
+        {{ c.unit_count }} {{ hr_plural(c.unit_count, 'cjelina', 'cjeline', 'cjelina') }},
+        {{ c.question_count }} {{ hr_plural(c.question_count, 'pitanje', 'pitanja', 'pitanja') }}
+      </p>
+      {% if c.days %}<p class="subject-days">{{ c.days }}</p>{% endif %}
+      {% if c.question_count %}
+      <div class="states" aria-hidden="true">
+        {% if c.verbatim %}<span class="seg seg-verbatim" style="--n: {{ c.verbatim }}"></span>{% endif %}
+        {% if c.own %}<span class="seg seg-own" style="--n: {{ c.own }}"></span>{% endif %}
+        {% if c.none %}<span class="seg seg-none" style="--n: {{ c.none }}"></span>{% endif %}
+      </div>
+      <ul class="state-legend">
+        <li><span class="dot dot-verbatim" aria-hidden="true"></span><b>{{ c.verbatim }}</b> doslovno</li>
+        <li><span class="dot dot-own" aria-hidden="true"></span><b>{{ c.own }}</b> vlastiti primjer</li>
+        <li><span class="dot dot-none" aria-hidden="true"></span><b>{{ c.none }}</b> nema u materijalima</li>
+      </ul>
+      {% else %}
+      <p class="subject-note">Pitanja još nisu učitana.</p>
+      {% endif %}
+      {% if c.review_count or c.exam_count %}<p class="subject-review"><a class="review-link" href="/predmet/{{ c.id }}/provjera">{% if c.review_count %}<b>Za provjeru: {{ c.review_count }}</b> {{ hr_plural(c.review_count, 'stranica', 'stranice', 'stranica') }}{% endif %}{% if c.review_count and c.exam_count %}, {% endif %}{% if c.exam_count %}<b>{% if not c.review_count %}Za provjeru: {% endif %}{{ c.exam_count }}</b> {{ hr_plural(c.exam_count, 'ispitna rečenica', 'ispitne rečenice', 'ispitnih rečenica') }}{% endif %}</a></p>{% endif %}
+      <p class="subject-built">
+        <span>{% if c.last_build %}Zadnja skripta: {{ hr_date(c.last_build) }}{% else %}Skripta još nije izrađena{% endif %}</span>
+        <span class="subject-open" aria-hidden="true">Otvori</span>
+      </p>
+    </article>
+  </li>
+{% endmacro %}

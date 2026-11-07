@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}">{{ predmet.name }}</a></p>
+<div class="page-head">
+  <h1>Neka aplikacija predloži odgovore</h1>
+</div>
+<p class="lead">Neobavezna pomoć: skripta se može napraviti i bez ovoga. Za svako pitanje bez odgovora aplikacija nađe tri najbolje stranice, a Gemini ili model na ovom računalu iz njih prepiše rečenice koje odgovaraju. Aplikacija zatim provjeri da svaka rečenica doista stoji na toj stranici, slovo po slovo. Što ne prođe provjeru ne sprema se.</p>
+{% if error %}<div class="notice notice-error" role="alert"><p>{{ error }}</p></div>{% endif %}
+
+<form method="post" action="/predmet/{{ predmet.id }}/automatski/pregled">
+  <section class="sec" aria-labelledby="h-tko">
+    <h2 id="h-tko">Tko predlaže</h2>
+    <fieldset class="pref-group">
+      <legend>Odaberi jedno</legend>
+      <label class="pref-choice"><input type="radio" name="nacin" value="gemini"{% if engine == 'gemini' %} checked{% endif %}>
+        <span class="pref-text"><b>Gemini (Google, besplatni ključ)</b>
+          <span class="muted">Brže i obično točnije. Tekst označenih stranica odlazi Googleu, ali tek nakon što vidiš točan popis stranica i potvrdiš. Model: {{ gemini_model }}.</span>
+          {% if gemini_problem %}<span class="tag tag-warn">Nije spremno</span> <span class="muted">{{ gemini_problem }} Postavi ga u <a href="/postavke">Postavkama</a>.</span>{% else %}<span class="tag">Spremno</span>{% endif %}</span></label>
+      <label class="pref-choice"><input type="radio" name="nacin" value="local"{% if engine == 'local' %} checked{% endif %}>
+        <span class="pref-text"><b>Model na ovom računalu (Ollama)</b>
+          <span class="muted">Ništa ne napušta računalo i ne treba ključ. Sporije je, a na hrvatskom češće pogriješi pa će manje odgovora proći provjeru. Model: {{ local_model }}.</span>
+          {% if local_problem %}<span class="tag tag-warn">Nije spremno</span> <span class="muted">{{ local_problem }}</span>{% else %}<span class="tag">Spremno</span>{% endif %}</span></label>
+    </fieldset>
+  </section>
+
+  <section class="sec" aria-labelledby="h-cjeline">
+    <h2 id="h-cjeline">Koje cjeline</h2>
+    {% if not rows %}
+    <p class="muted">Predmet nema cjelina.</p>
+    {% else %}
+    <fieldset class="consent-pages">
+      <legend>Cjeline čija pitanja nemaju odgovor</legend>
+      <ul>
+        {% for r in rows %}
+        <li><label class="check"><input type="checkbox" name="cjelina" value="{{ r.no }}"{% if r.no in ticked %} checked{% endif %}{% if not r.waiting %} disabled{% endif %}>
+          {{ r.no }}. {{ r.title }}
+          <span class="muted">{% if r.waiting %}{{ r.waiting }} {{ hr_plural(r.waiting, 'pitanje čeka', 'pitanja čekaju', 'pitanja čeka') }} odgovor{% else %}nema pitanja koja čekaju{% endif %}</span></label></li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    <p class="muted">Pitanja koja već imaju tvoj odgovor ne diraju se. Odgovor nađen samo na rukom pisanoj stranici ponaša se kako si postavio za ovaj predmet (čeka tvoj OK, ili se sprema s oznakom „nije provjereno”).</p>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Dalje: što će se pročitati</button>
+    </div>
+    {% endif %}
+  </section>
+</form>
+
+{% if recent %}
+<section class="sec" aria-labelledby="h-stari">
+  <h2 id="h-stari">Dosadašnji radovi</h2>
+  <ul class="q-list">
+    {% for j in recent %}
+    <li class="q-item">
+      <span class="q-name">Rad {{ j.job_id }} ({{ j.who }})</span>
+      <span class="muted q-reason">{% if j.running %}traje{% else %}spremljeno {{ j.saved }}, čeka OK {{ j.waiting }}, nema odgovora {{ j.none }}, nije prošlo provjeru {{ j.refused }}{% endif %}</span>
+      <a class="btn" href="/predmet/{{ predmet.id }}/automatski/posao/{{ j.job_id }}">Otvori</a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,108 @@
+{
+  "$defs": {
+    "ItemProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "difficulty": {
+          "default": 3,
+          "maximum": 5,
+          "minimum": 1,
+          "title": "Difficulty",
+          "type": "integer"
+        },
+        "fsrs_state": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fsrs State"
+        },
+        "item_id": {
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "last_pass_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Pass At"
+        },
+        "passes_done": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Passes Done",
+          "type": "integer"
+        },
+        "study_minutes": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Study Minutes",
+          "type": "number"
+        },
+        "target_passes": {
+          "default": 2,
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Target Passes",
+          "type": "integer"
+        },
+        "updated_at": {
+          "format": "date-time",
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "title": "ItemProgress",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "`progress.json`: export/import between the standalone HTML and the app.",
+  "properties": {
+    "exported_at": {
+      "format": "date-time",
+      "title": "Exported At",
+      "type": "string"
+    },
+    "items": {
+      "items": {
+        "$ref": "#/$defs/ItemProgress"
+      },
+      "title": "Items",
+      "type": "array"
+    },
+    "predmet": {
+      "minLength": 1,
+      "title": "Predmet",
+      "type": "string"
+    },
+    "version": {
+      "default": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "predmet",
+    "exported_at"
+  ],
+  "title": "ProgressFile",
+  "type": "object"
+}

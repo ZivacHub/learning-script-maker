@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "source": {
+    "id": "src-001",
+    "path": "Materijali/1. Primjer/skripta_primjer.pdf",
+    "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+    "role": "materials",
+    "unit_id": "u1",
+    "reliability": 4
+  },
+  "pages": [
+    {
+      "n": 1,
+      "image_path": "pages/src-001/p1.png",
+      "blocks": [
+        {"id": "b1", "type": "heading", "text": "Osna simetrija", "engine": "textlayer", "confidence": 1.0},
+        {
+          "id": "b2",
+          "type": "paragraph",
+          "text": "Osna simetrija s obzirom na pravac p je preslikavanje ravnine koje svakoj točki T pridružuje točku T'.",
+          "engine": "tesseract",
+          "confidence": 0.93,
+          "bbox": {"x0": 0.08, "y0": 0.12, "x1": 0.92, "y1": 0.2}
+        },
+        {"id": "b3", "type": "formula", "text": "|TN| = |T'N|", "latex": "|TN| = |T'N|", "engine": "manual", "edited_by_user": true}
+      ]
+    },
+    {
+      "n": 2,
+      "blocks": [
+        {"id": "b4", "type": "handwriting", "text": "Rotacija je izometrija.", "engine": "gemini", "confidence": 0.71}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}/automatski">Natrag na odabir</a></p>
+<h1>Predlaganje odgovora</h1>
+{% include "_auto_stanje.html" %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+{% endblock %}

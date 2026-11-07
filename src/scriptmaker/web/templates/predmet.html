@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_ispit.html" import exam_box %}
+{% block content %}
+<p class="crumb"><a href="/">Moji predmeti</a></p>
+
+<header class="subject-head">
+  <div class="page-head">
+    <h1>{{ card.name }}</h1>
+    {% if not card.active %}<span class="tag">Neaktivan</span>{% endif %}
+  </div>
+  <p class="subject-meta">
+    {{ card.unit_count }} {{ hr_plural(card.unit_count, 'cjelina', 'cjeline', 'cjelina') }},
+    {{ card.question_count }} {{ hr_plural(card.question_count, 'pitanje', 'pitanja', 'pitanja') }}{% if card.days %} · {{ card.days }}{% endif %}
+  </p>
+  {% if card.question_count %}
+  <div class="states" aria-hidden="true">
+    {% if card.verbatim %}<span class="seg seg-verbatim" style="--n: {{ card.verbatim }}"></span>{% endif %}
+    {% if card.own %}<span class="seg seg-own" style="--n: {{ card.own }}"></span>{% endif %}
+    {% if card.none %}<span class="seg seg-none" style="--n: {{ card.none }}"></span>{% endif %}
+  </div>
+  <ul class="state-legend">
+    <li><span class="dot dot-verbatim" aria-hidden="true"></span><b>{{ card.verbatim }}</b> doslovno</li>
+    <li><span class="dot dot-own" aria-hidden="true"></span><b>{{ card.own }}</b> vlastiti primjer</li>
+    <li><span class="dot dot-none" aria-hidden="true"></span><b>{{ card.none }}</b> nema u materijalima</li>
+  </ul>
+  {% else %}
+  <p class="muted">Pitanja još nisu učitana.</p>
+  {% endif %}
+  <div class="head-actions">
+    <a class="btn btn-primary" href="/predmet/{{ card.id }}/skripta">Izradi skriptu</a>
+    <a class="btn" href="/predmet/{{ card.id }}/pregled">Pregledaj pitanja</a>
+    <a class="btn" href="/predmet/{{ card.id }}/provjera">Za provjeru{% if card.review_count or card.exam_count %} ({{ card.review_count + card.exam_count }}){% endif %}</a>
+  </div>
+  <p class="look-line">
+    Skripta će izgledati: <b>{{ look[0] }}</b>{% for part in look[1:] %} · {{ part }}{% endfor %}{% if look_custom %} · <span class="tag">prilagođeno</span>{% endif %}
+    <a href="/predmet/{{ card.id }}/izgled">Promijeni</a>
+  </p>
+  <p class="muted subject-built">
+    {% if card.last_build %}Zadnja skripta izrađena je {{ hr_date(card.last_build) }}{% else %}Skripta još nije izrađena.{% endif %}
+    Odgovori koji nedostaju: <a href="/predmet/{{ card.id }}/automatski">neka ih predloži aplikacija</a> ili <a href="/predmet/{{ card.id }}/claude">Claude</a>.
+  </p>
+</header>
+
+<section class="materials" id="p-cjeline" aria-labelledby="h-cjeline">
+  <h2 id="h-cjeline">Gradivo</h2>
+  {% if file_note[0] %}<p class="notice-line{% if file_note[0] == 'error' %} form-error{% endif %}" role="status">{{ file_note[1] }}</p>{% endif %}
+  <p id="progress-say" class="visually-hidden" role="status" aria-live="polite"></p>
+  <div id="cjeline-region" data-source="/predmet/{{ card.id }}/cjeline" aria-live="polite"
+       hx-get="/predmet/{{ card.id }}/cjeline" hx-trigger="load" hx-swap="innerHTML">
+    {% include "_cjeline_skeleton.html" %}
+  </div>
+  <noscript><p class="muted">Za popis datoteka uključi JavaScript u pregledniku.</p></noscript>
+  <template id="units-skeleton">{% include "_cjeline_skeleton.html" %}</template>
+</section>
+
+<details class="panel" id="p-ispit">
+  <summary><h2 id="h-ispit">Ispit</h2><span class="panel-hint">{% if card.exam_date %}{{ card.exam_date.strftime('%d. %m. %Y.') }}{% else %}bez datuma{% endif %}</span></summary>
+  <div class="panel-body">{{ exam_box(card, 'subject') }}</div>
+</details>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+<script src="/static/subject.js" defer></script>
+<script src="/static/exam.js" defer></script>
+{% endblock %}

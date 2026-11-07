@@ -1,0 +1,72 @@
+{# Step 5.8: the bars, rows and lists of progress in the app. The bar markup is the one in tokens.css (.prog); the wording is the script's. #}
+{% macro goal_reason(goal) -%}
+{%- if goal.auto -%}
+Automatski: {{ goal.count }} {{ hr_plural(goal.count, 'pitanje', 'pitanja', 'pitanja') }} → {{ goal.value }} {{ hr_plural(goal.value, 'prolaz', 'prolaza', 'prolaza') }}
+{%- else -%}
+Postavljeno ručno: {{ goal.value }} {{ hr_plural(goal.value, 'prolaz', 'prolaza', 'prolaza') }}
+{%- endif -%}
+{%- endmacro %}
+
+{% macro roll_bar(label, roll) -%}
+<span class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="{{ roll.total }}" aria-valuenow="{{ roll.done }}"
+  aria-valuetext="{{ roll.done }} od {{ roll.total }} prolaza, gotovo {{ roll.finished }} od {{ roll.count }}" aria-label="{{ label }}"
+  data-state="{{ roll.state }}" style="--frac: {{ roll.frac }}; --blend: {{ roll.blend }}">
+  <span class="prog-track"><span class="prog-fill"></span></span>
+  <span class="prog-text">{{ roll.done }}/{{ roll.total }}{% if roll.complete %} ✓{% endif %}</span>
+</span>
+{%- endmacro %}
+
+{% macro unit_roll(u, oob=false) -%}
+<span class="roll" id="roll-u{{ u.no }}"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {{ roll_bar('Napredak lekcije: ' ~ u.title, u.roll) }}
+  <span class="study-note">Gotovo: {{ u.roll.finished }} od {{ u.roll.count }}</span>
+</span>
+{%- endmacro %}
+
+{% macro total_roll(progress, oob=false) -%}
+<div class="roll roll-total" id="roll-total"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <span class="study-label">Napredak predmeta</span>
+  {{ roll_bar('Napredak ukupno', progress.roll) }}
+  <span class="study-note">Gotovo: {{ progress.roll.finished }} od {{ progress.roll.count }}</span>
+</div>
+{%- endmacro %}
+
+{% macro question_row(q, predmet_id) -%}
+{% set base = '/predmet/' ~ predmet_id ~ '/napredak/' ~ q.id %}
+<li class="qrow" id="q-{{ q.id }}" data-state="{{ q.state }}">
+  <p class="qrow-text"><span class="qrow-no">{{ q.no }}.</span> {{ q.text }}</p>
+  <span class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="{{ q.goal }}" aria-valuenow="{{ [q.passes, q.goal]|min }}"
+    aria-valuetext="{{ q.passes }} od {{ q.goal }} prolaza{% if q.done %}, gotovo{% endif %}" aria-label="Napredak: {{ q.text }}"
+    data-state="{{ q.state }}" style="--frac: {{ q.frac }}; --blend: {{ q.blend }}">
+    <span class="prog-track"><span class="prog-fill"></span><span class="prog-ticks" aria-hidden="true">{% for _ in range(q.goal) %}<i></i>{% endfor %}</span></span>
+    <span class="prog-text">{{ q.passes }}/{{ q.goal }}{% if q.done %} ✓{% endif %}</span>
+  </span>
+  <span class="study-btns">
+    <form method="post" action="{{ base }}/naucio" hx-post="{{ base }}/naucio" hx-target="#q-{{ q.id }}" hx-swap="outerHTML">
+      <button class="study-btn prog-learn" id="learn-{{ q.id }}" type="submit" aria-label="Naučeno: {{ q.text }}">Naučeno</button>
+    </form>
+    <form method="post" action="{{ base }}/ponisti" hx-post="{{ base }}/ponisti" hx-target="#q-{{ q.id }}" hx-swap="outerHTML">
+      <button class="study-btn prog-undo" id="undo-{{ q.id }}" type="submit"{% if not q.passes %} aria-disabled="true"{% endif %}
+        aria-label="Poništi jedan prolaz: {{ q.text }}" title="Poništi jedan prolaz">−</button>
+    </form>
+  </span>
+  <form class="study-target" method="post" action="{{ base }}/cilj" hx-post="{{ base }}/cilj" hx-trigger="change" hx-target="#q-{{ q.id }}" hx-swap="outerHTML">
+    <label><span>Cilj</span>
+      <select name="cilj" id="goal-{{ q.id }}" aria-label="Cilj (broj prolaza): {{ q.text }}">
+        <option value="">Zadano ({{ q.fallback }})</option>
+        {% for n in range(1, 11) %}<option value="{{ n }}"{% if n == q.own %} selected{% endif %}>{{ n }}</option>{% endfor %}
+      </select></label>
+    <noscript><button class="btn" type="submit">Spremi</button></noscript>
+  </form>
+</li>
+{%- endmacro %}
+
+{% macro question_list(unit, predmet_id) -%}
+<ul class="qs" id="qs-{{ unit.no }}">
+  {% for q in unit.questions %}{{ question_row(q, predmet_id) }}{% endfor %}
+</ul>
+{%- endmacro %}
+
+{% macro say(text) -%}
+<span hx-swap-oob="innerHTML:#progress-say">{{ text }}</span>
+{%- endmacro %}

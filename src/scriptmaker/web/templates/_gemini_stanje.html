@@ -1,0 +1,49 @@
+{# The progress part of the page. While the job runs it asks for itself again every 2 seconds (HTMX); the finished
+   versions carry no trigger, so the page stops asking. #}
+{% set pct = (job.fraction * 100)|round|int %}
+{% set base = "/predmet/" ~ predmet_id ~ "/provjera" %}
+<section id="posao" class="job job-{{ job.state }}" aria-live="polite"
+  {% if job.running %}hx-get="{{ base }}/gemini/posao/{{ job.job_id }}/stanje" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+
+  {% if job.state == 'running' %}
+  <h2>Gemini čita{% if job.cancel %}: prekidam{% endif %}</h2>
+  <div class="bar" role="progressbar" aria-label="Napredak čitanja" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}">
+    <span id="posao-fill" class="bar-fill" style="--frac: {{ '%.4f'|format(job.fraction) }}"></span>
+  </div>
+  <p class="job-count">Stranice: <b>{{ job.done }}</b> od <b>{{ job.total }}</b>, prošlo {{ duration(job.seconds) }}</p>
+  {% if job.current %}<p class="muted job-current">Sada čita: {{ job.current }}</p>{% endif %}
+  <p class="muted">Svaka stranica je jedan zahtjev Googleu: obično pola minute, a kad je Google zauzet i nekoliko minuta (aplikacija sama ponovi). Pročitano se odmah sprema. Možeš zatvoriti ovu stranicu: čitanje teče dok je aplikacija otvorena.</p>
+  <button class="btn" type="button" hx-post="{{ base }}/gemini/posao/{{ job.job_id }}/prekini" hx-target="#posao" hx-swap="outerHTML"
+    {% if job.cancel %}disabled{% endif %}>Prekini čitanje</button>
+
+  {% elif job.state == 'failed' %}
+  <h2>Čitanje nije uspjelo</h2>
+  <p role="alert">{{ job.error or 'Nešto je pošlo po zlu.' }}</p>
+  <p><a class="btn" href="{{ base }}">Natrag na Za provjeru</a></p>
+
+  {% else %}
+  <h2>{% if job.state == 'canceled' %}Prekinuto{% elif job.stopped %}Zaustavljeno{% else %}Gotovo{% endif %}</h2>
+  <div class="bar" role="progressbar" aria-label="Napredak čitanja" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}">
+    <span class="bar-fill" style="--frac: {{ '%.4f'|format(job.fraction) }}"></span>
+  </div>
+  <ul class="summary">
+    <li>Pročitano: <b>{{ job.read }}</b> od <b>{{ job.total }}</b> {{ hr_plural(job.total, 'stranice', 'stranice', 'stranica') }}, za {{ duration(job.seconds) }} (model {{ job.model }}).</li>
+    {% if job.left %}<li>Nije pokušano: <b>{{ job.left }}</b> {{ hr_plural(job.left, 'stranica', 'stranice', 'stranica') }}. Ostaju na popisu Za provjeru; možeš ih pročitati kasnije ili ispraviti tipkanjem.</li>{% endif %}
+  </ul>
+  {% if job.stopped %}
+  <div class="notice notice-warn" role="note">
+    <h2>Zašto je stalo</h2>
+    <p>{{ job.stop_message }}</p>
+    {% if job.stopped == 'daily' %}<p class="muted">Ništa nije izgubljeno i ništa se ne mora čekati: skriptu možeš napraviti i bez ovih stranica, a kasnije ih možeš pročitati jednim gumbom.</p>{% endif %}
+  </div>
+  {% endif %}
+  {% if job.problems %}
+  <div class="notice notice-warn" role="note">
+    <h2>{{ job.problems|length }} {{ hr_plural(job.problems|length, 'stranica nije pročitana', 'stranice nisu pročitane', 'stranica nije pročitano') }}</h2>
+    <ul>{% for p in job.problems %}<li>{{ p.page }}: {{ p.reason }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+  <p>Pročitani tekst je <b>nacrt</b>: otvori stranicu, usporedi sa slikom i pritisni „Spremi i označi stranicu provjerenom”.</p>
+  <p><a class="btn btn-primary" href="{{ base }}">Na popis Za provjeru</a></p>
+  {% endif %}
+</section>

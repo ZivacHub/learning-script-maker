@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="{{ lang }}" data-look="{{ look }}"{% if theme %} data-theme="{{ theme }}"{% endif %}{% if dense %} data-dense{% endif %}{% if font_scale %} style="--font-scale:{{ font_scale }}"{% endif %}>
+{% include "_head.html" %}
+<body class="overview">
+<a class="skip" href="#sadrzaj">Preskoči na sadržaj</a>
+
+<header class="mast" id="vrh">
+  <div class="wrap mast-in">
+    <p class="eyebrow">{{ eyebrow }}</p>
+    <h1>{{ title }}</h1>
+    {% if subtitle %}<p class="lead">{{ subtitle }}</p>{% endif %}
+  </div>
+</header>
+
+<nav class="sections" aria-label="Sadržaj">
+  <div class="wrap nav-in">
+    {% for u in units %}<a href="#{{ u.anchor }}">{{ u.title }}<span class="n">{{ u.question_count }}</span></a>
+    {% endfor %}
+  </div>
+  <button class="icon-btn" id="theme-btn" type="button" aria-label="Prebaci svijetli/tamni način" title="Prebaci svijetli/tamni način">
+    <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+    <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+  </button>
+</nav>
+
+<main id="sadrzaj">
+<div class="wrap">
+
+<div class="toolbar">
+  <input class="search" id="search" type="search" placeholder="Pretraži kartice…" aria-label="Pretraži kartice" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="search">
+  <button class="chip" id="f-none" type="button" aria-pressed="false">Prikaži samo bez odgovora</button>
+  <p class="search-status" id="search-status" role="status" aria-live="polite"></p>
+</div>
+
+{% if hidden_note %}<p class="pref-note">{{ hidden_note }}</p>
+{% endif %}
+<div class="legend">
+  <span><i class="dot s"></i> doslovno prepisano iz materijala</span>
+  <span><i class="dot o"></i> vlastiti primjer / izračun po postupku iz materijala</span>
+  <span><i class="dot n"></i> nema u materijalima</span>
+</div>
+
+{% for u in units %}
+<section class="ov-sec {{ u.css_class }}"{% if u.style %} style="{{ u.style }}"{% endif %} id="{{ u.anchor }}">
+  <div class="sec-head">
+    <p class="eyebrow">{{ u.kicker }}</p>
+    <h2>{{ u.title }} <span class="count">{{ u.count_label }}</span></h2>
+    {% if u.description %}<p class="lead">{{ u.description }}</p>{% endif %}
+  </div>
+
+  {% if u.emptied %}<p class="filtered-note">{{ emptied_line }}</p>{% endif %}
+  {% for g in u.groups %}
+  <div class="ov-group">
+    <p class="group-title">{{ g.title }}</p>
+    {% for it in g.entries %}
+    <article class="card" id="{{ it.anchor }}" data-item="{{ it.id }}" data-st="{{ it.dot }}">
+      <h3><span class="cno">{{ it.no }}</span><span class="ct">{{ it.question_html }}</span><i class="dot {{ it.dot }}" role="img" aria-label="{{ it.status_label }}"></i></h3>
+      {% if it.lead_html %}<p class="lead">{{ it.lead_html }}</p>{% endif %}
+      {% if it.status == 'verbatim' %}
+        {% if show_source and it.source_line %}<p class="src">{{ it.source_line }}</p>{% endif %}
+        <div class="verbatim">{{ it.answer_html }}</div>
+      {% elif it.status == 'own' %}
+        <p class="src">Vlastiti primjer / izračun po postupku iz materijala.</p>
+        <div class="own-block">{{ it.answer_html }}</div>
+      {% else %}
+        <div class="none-block"><span class="big">Nema u materijalima.</span>Ovo nije pronađeno u priloženim materijalima, zato nije ništa izmišljeno.</div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</section>
+{% endfor %}
+
+<footer>{{ footer }}</footer>
+</div>
+</main>
+
+<button id="top-btn" type="button" aria-label="Na vrh stranice">↑ Na vrh</button>
+
+{% if katex_js %}<script>
+{{ katex_js }}
+</script>{% endif %}
+<script>
+{{ boot_js }}
+</script>
+</body>
+</html>

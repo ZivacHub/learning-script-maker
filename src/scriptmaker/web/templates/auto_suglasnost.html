@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_ai_text.html" import warning %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}/automatski">Natrag na odabir</a></p>
+<div class="page-head">
+  <h1>Što će se pročitati</h1>
+</div>
+<p class="lead">{{ plan.items|length }} {{ hr_plural(plan.items|length, 'pitanje', 'pitanja', 'pitanja') }} bez odgovora{% if plan.no_pages %}; za {{ plan.no_pages }} {{ hr_plural(plan.no_pages, 'pitanje', 'pitanja', 'pitanja') }} nije nađena nijedna stranica s tekstom, pa {{ hr_plural(plan.no_pages, 'ostaje', 'ostaju', 'ostaju') }} otvoreno{% endif %}. Za svako se uzimaju tri najbolje stranice. Model: <b>{{ model }}</b>.</p>
+
+<form method="post" action="/predmet/{{ predmet.id }}/automatski/pokreni">
+  <input type="hidden" name="nacin" value="{{ engine }}">
+  {% for u in units %}<input type="hidden" name="cjelina" value="{{ u }}">{% endfor %}
+
+  {% if engine == 'gemini' %}
+  <section class="consent" aria-labelledby="consent-h">
+    <h2 id="consent-h">Ove stranice odlaze Googleu</h2>
+    {{ warning(rows, 'kao tekst (bez slike)', 'zajedno s pitanjem, da iz nje prepiše rečenice koje odgovaraju') }}
+    <fieldset class="consent-pages">
+      <legend>Označi stranice koje smiju otići ({{ rows|length }} {{ hr_plural(rows|length, 'stranica', 'stranice', 'stranica') }} u popisu)</legend>
+      <ul>
+        {% for r in rows %}
+        <li><label class="check"><input type="checkbox" name="stranica" value="{{ r.key or loop.index0 }}"{% if r.checked %} checked{% endif %}>
+          <span class="consent-file">{{ r.file }}</span>, str. {{ r.page }}
+          <span class="muted">{{ r.role_label }}</span>{% if r.others_notes %} <span class="tag tag-warn">Tuđe bilješke</span>{% endif %}</label></li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Pošalji označene stranice Googleu</button>
+      <a class="btn" href="/predmet/{{ predmet.id }}/automatski">Odustani</a>
+    </div>
+  </section>
+  {% else %}
+  <section class="sec" aria-labelledby="h-lokalno">
+    <h2 id="h-lokalno">Sve ostaje na ovom računalu</h2>
+    <p>Model <b>{{ model }}</b> radi u Ollami na ovom računalu. Ništa se ne šalje na internet i ne treba ključ. Čita {{ plan.pages|length }} {{ hr_plural(plan.pages|length, 'stranicu', 'stranice', 'stranica') }}, jedno pitanje po jedno (otprilike desetak sekundi po pitanju).</p>
+    <div class="form-actions">
+      <button class="btn btn-primary" type="submit">Pokreni</button>
+      <a class="btn" href="/predmet/{{ predmet.id }}/automatski">Odustani</a>
+    </div>
+  </section>
+  {% endif %}
+</form>
+{% endblock %}

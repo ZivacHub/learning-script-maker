@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_suglasnost.html" import consent %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}/provjera">Za provjeru</a></p>
+<div class="page-head">
+  <h1>Gemini čita stranice</h1>
+</div>
+<p class="lead">Gemini je neobavezna pomoć: skripta se može napraviti i bez njega. Pročitani tekst je samo nacrt koji ti provjeriš uz sliku.</p>
+{% if error %}<div class="notice notice-error" role="alert"><p>{{ error }}</p></div>{% endif %}
+
+{% if setup_problem %}
+<div class="notice notice-warn" role="note">
+  <h2>Gemini još nije postavljen</h2>
+  <p>{{ setup_problem }} Postavi ga u <a href="/postavke">Postavkama</a>, ili nastavi bez njega: stranice možeš ispraviti i tipkanjem.</p>
+</div>
+{% elif not rows %}
+<p class="muted">Nema stranica koje čekaju provjeru, pa nema što poslati.</p>
+<p><a class="btn" href="/predmet/{{ predmet.id }}/provjera">Natrag na Za provjeru</a></p>
+{% else %}
+<p class="muted">Model: <b>{{ model }}</b> (mijenja se u <a href="/postavke">Postavkama</a>). Stranice idu jedna po jedna; ako se dnevno ograničenje potroši, čitanje stane i javi koliko je stranica pročitano.</p>
+{{ consent(rows, "/predmet/" ~ predmet.id ~ "/provjera/gemini", "/predmet/" ~ predmet.id ~ "/provjera") }}
+{% endif %}
+{% endblock %}

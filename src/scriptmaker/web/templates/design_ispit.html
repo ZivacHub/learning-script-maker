@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% from "_ispit.html" import exam_box %}
+{% block content %}
+<p class="crumb"><a href="/design/tokens">Dizajn tokeni</a></p>
+<div class="page-head"><h1>Primjeri oznake ispita</h1></div>
+<p class="muted">Samo za razvoj. Sve brojke i datumi su izmišljeni primjeri. Pravi predmeti dobivaju stvarnu oznaku tek kad stigne planer (faza 9); do tada pokazuju stvarni datum ispita i preostale dane.</p>
+<ul class="subjects">
+  {% for c in cards %}<li><article class="subject"><h2>{{ c.name }}</h2>{{ exam_box(c, 'preview', false) }}</article></li>{% endfor %}
+</ul>
+{% endblock %}

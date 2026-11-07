@@ -1,0 +1,149 @@
+{% from "_napredak.html" import goal_reason, unit_roll, total_roll, question_list %}
+{% macro source_list(sources, predmet_id) %}
+<ul class="srcs">
+  {% for s in sources %}
+  <li class="src{% if not s.enabled %} is-off{% endif %}">
+    <div class="src-main">
+      <span class="src-name">{{ s.name }}</span>
+      {% if s.folder %}<span class="muted src-folder">{{ s.folder }}</span>{% endif %}
+    </div>
+    <span class="tag src-role"><span class="visually-hidden">Uloga: </span>{{ s.role_label }}</span>
+    <form class="use-file" method="post" action="/predmet/{{ predmet_id }}/izvor/{{ s.id }}/koristi"
+          hx-post="/predmet/{{ predmet_id }}/izvor/{{ s.id }}/koristi" hx-trigger="change" hx-swap="none" data-autosave>
+      <label class="use-file"><input type="checkbox" name="koristi"{% if s.enabled %} checked{% endif %}> Koristi ovu datoteku</label>
+      <span class="save-status" role="status" aria-live="polite" data-status></span>
+      <noscript><button class="btn" type="submit">Spremi</button></noscript>
+    </form>
+
+    <form class="rel" method="post" action="/predmet/{{ predmet_id }}/izvor/{{ s.id }}/pouzdanost"
+          hx-post="/predmet/{{ predmet_id }}/izvor/{{ s.id }}/pouzdanost" hx-trigger="change" hx-swap="none" data-autosave>
+      <fieldset>
+        <legend class="rel-label">Pouzdanost <span class="visually-hidden">datoteke {{ s.name }}</span></legend>
+        <span class="stars">
+          {% for v in (1, 2, 3, 4, 5) %}
+          <input type="radio" id="rel-{{ s.id }}-{{ v }}" name="reliability" value="{{ v }}"{% if v == s.reliability %} checked{% endif %}>
+          <label for="rel-{{ s.id }}-{{ v }}"><span class="visually-hidden">{{ v }} od 5</span></label>
+          {% endfor %}
+        </span>
+        <span class="rel-value" data-rel-value>{{ s.reliability }} od 5</span>
+      </fieldset>
+      <span class="save-status" role="status" aria-live="polite" data-status></span>
+      <noscript><button class="btn" type="submit">Spremi</button></noscript>
+    </form>
+
+    <div class="src-pages">
+      {% if not s.read %}
+      <span class="tag tag-warn">Nije pročitano</span>
+      <span class="muted">Za ovu datoteku nema rezultata čitanja. Pokreni uvoz ponovno.</span>
+      {% else %}
+      {% set c = s.counts %}
+      <p class="muted src-counts">
+        {{ s.pages|length }} {{ hr_plural(s.pages|length, 'stranica', 'stranice', 'stranica') }}:
+        {% for key in state_order if c[key] %}{{ c[key] }} {{ state_labels[key] }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </p>
+      {% if s.pages|length > 1 or s.needs_review %}
+      <details class="pages">
+        <summary>Pokaži stranice</summary>
+        <ul class="page-chips">
+          {% for p in s.pages %}
+          <li class="pg pg-{{ p.state }}"{% if p.reason %} title="{{ p.reason }}"{% endif %}>
+            {% if p.state != 'text' %}<a href="/predmet/{{ predmet_id }}/izvor/{{ s.id }}/stranica/{{ p.n }}/ispravi" title="Ispravi tekst ove stranice"><span class="pg-n">{{ p.n }}</span><span class="pg-mark" aria-hidden="true"></span><span class="visually-hidden">{{ state_labels[p.state] }}; ispravi tekst</span></a>
+            {% else %}<span class="pg-n">{{ p.n }}</span><span class="pg-mark" aria-hidden="true"></span><span class="visually-hidden">{{ state_labels[p.state] }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+      {% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{% if data is none %}
+<div class="notice notice-error" role="alert">
+  <h2>Cjeline se nisu učitale</h2>
+  <p>Aplikacija nije mogla pročitati popis datoteka. Tvoji podaci nisu promijenjeni. Pokušaj ponovno; ako se ponovi, pogledaj prozor u kojem je aplikacija pokrenuta.</p>
+  <button class="btn" type="button" data-retry>Pokušaj ponovno</button>
+</div>
+{% elif not data.file_count and not data.units %}
+<div class="notice">
+  <h2>Ovaj predmet još nema datoteka</h2>
+  <p>Datoteke dolaze s uvozom mape ili zipa. Odaberi mapu, potvrdi cjeline i uloge, i ovdje će se pojaviti sve što je pročitano.</p>
+  <a class="btn btn-primary" href="/uvoz">Uvezi gradivo</a>
+</div>
+{% else %}
+<ul class="units">
+  {% for u in data.units %}
+  {% set pu = prog_unit.get(u.no) %}
+  <li>
+    <details class="unit" data-no="{{ u.no }}" style="--unit: var(--unit-{{ accent(u.no) }})"{% if data.units|length == 1 and not data.loose %} open{% endif %}>
+      <summary>
+        <span class="unit-no">{{ u.no }}.</span>
+        <span class="unit-title">{{ u.title }}</span>
+        <span class="muted unit-meta">
+          {{ u.sources|length }} {{ hr_plural(u.sources|length, 'datoteka', 'datoteke', 'datoteka') }}{% if u.question_count %}, {{ u.question_count }} {{ hr_plural(u.question_count, 'pitanje', 'pitanja', 'pitanja') }}{% endif %}
+        </span>
+        {% if u.review_count %}<span class="tag tag-warn">Za provjeru: {{ u.review_count }}</span>{% endif %}
+      </summary>
+      {% if pu and pu.questions %}
+      <div class="unit-progress">
+        {{ unit_roll(pu) }}
+        <div class="unit-goal-row">
+          <h3>Pitanja i napredak</h3>
+          <form class="study-target" method="post" action="/predmet/{{ predmet_id }}/napredak/cjelina/{{ u.no }}/cilj"
+                hx-post="/predmet/{{ predmet_id }}/napredak/cjelina/{{ u.no }}/cilj" hx-trigger="change" hx-target="#qs-{{ u.no }}" hx-swap="outerHTML">
+            <label><span>Cilj za sva pitanja</span>
+              <select name="cilj" id="ugoal-{{ u.no }}" aria-label="Cilj za sva pitanja u lekciji: {{ u.title }}">
+                <option value=""{% if pu.goal is none %} selected{% endif %}>Zadano ({{ progress.goal.value }})</option>
+                {% for n in range(1, 11) %}<option value="{{ n }}"{% if pu.goal == n %} selected{% endif %}>{{ n }}</option>{% endfor %}
+              </select></label>
+            <noscript><button class="btn" type="submit">Spremi</button></noscript>
+          </form>
+        </div>
+        {{ question_list(pu, predmet_id) }}
+      </div>
+      <h3 class="unit-files-h">Datoteke</h3>
+      {% endif %}
+      {% if u.sources %}{{ source_list(u.sources, predmet_id) }}{% else %}<p class="muted unit-empty">Ova cjelina nema datoteka.</p>{% endif %}
+    </details>
+  </li>
+  {% endfor %}
+  {% if data.loose %}
+  <li>
+    <details class="unit unit-loose">
+      <summary>
+        <span class="unit-title">Datoteke bez cjeline</span>
+        <span class="muted unit-meta">{{ data.loose|length }} {{ hr_plural(data.loose|length, 'datoteka', 'datoteke', 'datoteka') }}, na primjer popisi pitanja i primjeri ispita</span>
+      </summary>
+      {{ source_list(data.loose, predmet_id) }}
+    </details>
+  </li>
+  {% endif %}
+</ul>
+<p class="legend" id="page-legend">
+  Stranice:
+  <span class="lg"><span class="pg-mark pg-text" aria-hidden="true"></span>tekst iz datoteke</span>
+  <span class="lg"><span class="pg-mark pg-ocr" aria-hidden="true"></span>pročitano OCR-om</span>
+  <span class="lg"><span class="pg-mark pg-review" aria-hidden="true"></span>za provjeru</span>
+  <span class="lg"><span class="pg-mark pg-edited" aria-hidden="true"></span>ispravljeno</span>
+</p>
+{% if progress and progress.roll.count %}
+<details class="panel panel-sub" id="napredak">
+  <summary><h2 id="h-napredak">Napredak i cilj</h2><span class="panel-hint">gotovo {{ progress.roll.finished }} od {{ progress.roll.count }}</span></summary>
+  <div class="panel-body prog-all">
+  {{ total_roll(progress) }}
+  <p class="muted" id="goal-reason">Cilj za pitanja bez vlastitog cilja: {{ goal_reason(progress.goal) }}. Broj prolaza za cijeli predmet mijenjaš u <a href="/predmet/{{ predmet_id }}/izgled">Izgled skripte</a> (Sve postavke).</p>
+  <div class="study-io">
+    <a class="btn" href="/predmet/{{ predmet_id }}/napredak/datoteka" download>Spremi napredak</a>
+    <form class="prog-file" method="post" action="/predmet/{{ predmet_id }}/napredak/datoteka" enctype="multipart/form-data">
+      <label class="field"><span class="visually-hidden">Datoteka napretka (.json)</span>
+        <input type="file" name="datoteka" accept=".json,application/json" required></label>
+      <button class="btn" type="submit">Učitaj napredak</button>
+    </form>
+  </div>
+</div>
+</details>
+{% endif %}
+{% endif %}

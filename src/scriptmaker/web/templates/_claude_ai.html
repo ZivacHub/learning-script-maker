@@ -1,0 +1,22 @@
+{# What the Claude hand-off pack left on the question (step 6.3, D57): `ai` = review.AiInfo. #}
+<div class="rv-box rv-ai">
+  {% if ai.picked %}
+  {% set who = {'gemini': ['Geminijev odabir', 'Gemini je predložio'], 'local': ['Odabir modela na računalu', 'Model na ovom računalu je predložio']}.get(ai.who, ['Claudeov odabir', 'Claude je predložio']) %}
+  <p><span class="tag tag-warn">{{ who[0] }}</span> {{ who[1] }} ovaj odgovor, a aplikacija je provjerila da je citat doista na toj stranici. Pogledaj ga; ako se ne slažeš, poništi odluku ili odaberi drugu stranicu niže.</p>
+  {% endif %}
+  {% if ai.pending %}
+  <p><span class="tag tag-warn">Čeka tvoj OK</span> Prijedlog odgovora s rukom pisane stranice ({{ ai.pending.file }}, str. {{ ai.pending.page }}). Računalo je ruku pročitalo samo grubo, pa to može potvrditi samo osoba: usporedi sa slikom stranice.</p>
+  <blockquote>{{ ai.pending.quote }}</blockquote>
+  <div class="form-actions">
+    <form method="post" action="/predmet/{{ predmet.id }}/claude/cekaju/{{ current.id }}/prihvati"><button class="btn btn-primary" type="submit">Prihvati kao doslovno</button></form>
+    <form method="post" action="/predmet/{{ predmet.id }}/claude/cekaju/{{ current.id }}/odbaci"><button class="btn" type="submit">Odbaci prijedlog</button></form>
+  </div>
+  {% endif %}
+  {% if ai.explanation %}
+  <details class="rv-explain">
+    <summary>Objasni jednostavnije</summary>
+    <p><span class="tag">AI, nije iz gradiva</span></p>
+    <p>{{ ai.explanation }}</p>
+  </details>
+  {% endif %}
+</div>

@@ -1,0 +1,35 @@
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="{{ theme_light }}">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="{{ theme_dark }}">
+<meta name="generator" content="Learning Script Maker">
+<link rel="icon" href="data:,">
+<title>{{ title }}</title>
+<script>
+/* before first paint: restore the reader's theme and tab, so the page never flashes the wrong ones */
+window.__SM_KEY = {{ key|tojson }};
+window.__SM_MODES = {{ modes|tojson }};
+window.__SM_START = {{ start_mode|tojson }};  /* the tab a first-time reader sees */
+{% if progress %}window.__SM_PROG = {{ progress|tojson }};  /* goal passes per question and the subject's name */
+{% endif %}(function () {
+  var root = document.documentElement;
+  root.classList.add('js');
+  try {
+    var t = localStorage.getItem(window.__SM_KEY + ':theme');
+    if (t === 'dark' || t === 'light') root.setAttribute('data-theme', t);
+    var m = localStorage.getItem(window.__SM_KEY + ':mode');
+    if (window.__SM_MODES.indexOf(m) > -1) root.setAttribute('data-mode', m);
+  } catch (e) {}
+  if (!root.getAttribute('data-mode')) root.setAttribute('data-mode', window.__SM_MODES.indexOf(window.__SM_START) > -1 ? window.__SM_START : 'gradivo');
+})();
+</script>
+<style>
+{{ css_tokens }}
+{{ css_fonts }}
+{{ css_katex }}
+{{ css_script }}
+{{ css_extra }}
+</style>
+</head>

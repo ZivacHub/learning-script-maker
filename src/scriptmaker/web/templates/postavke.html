@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_ai_text.html" import warning %}
+{% block content %}
+<div class="page-head"><h1>Postavke</h1></div>
+{% if note %}<p class="notice-line{% if note[0] == 'error' %} form-error{% endif %}" role="status">{{ note[1] }}</p>{% endif %}
+
+<section class="sec" aria-labelledby="h-gemini">
+  <h2 id="h-gemini">Gemini (neobavezno)</h2>
+  <p>Gemini može pročitati rukopis i matematiku koje besplatni čitači ne razumiju. Sve ostalo u aplikaciji radi i bez ključa. Gemini samo čita stranice: nikad ne piše niti odlučuje odgovore.</p>
+  {{ warning() }}
+
+  <h3>Ključ</h3>
+  {% if has_key %}
+  <p class="key-state"><span class="key-dots" aria-hidden="true">●●●●●●●●●●●●</span> Ključ je spremljen u datoteku <code>.env</code> u mapi projekta. Aplikacija ga više ne prikazuje.</p>
+  <form method="post" action="/postavke/kljuc/obrisi" data-confirm="Obrisati spremljeni ključ?">
+    <button class="btn" type="submit">Obriši ključ</button>
+  </form>
+  {% else %}
+  <p class="key-state">Ključ još nije spremljen.</p>
+  {% endif %}
+  <form class="key-form" method="post" action="/postavke/kljuc">
+    <label class="field"><span>{{ 'Novi ključ (zamjenjuje spremljeni)' if has_key else 'Tvoj Gemini ključ' }}</span>
+      <input type="password" name="kljuc" autocomplete="off" spellcheck="false" required maxlength="200" inputmode="text"></label>
+    <p class="muted">Ključ upisuješ samo ovdje, nikad u razgovor. Datoteka <code>.env</code> je običan tekst: tko koristi ovo računalo ili ima kopiju mape može je pročitati. Ne ide na GitHub.</p>
+    <button class="btn btn-primary" type="submit">Spremi ključ</button>
+  </form>
+
+  <h3>Model</h3>
+  <form class="model-form" method="post" action="/postavke/model">
+    <label class="field"><span>Naziv modela</span>
+      <input type="text" name="model" value="{{ model }}" required maxlength="80" autocomplete="off" spellcheck="false"></label>
+    <p class="muted">Nazivi modela se mijenjaju. Zadano je <code>{{ default_model }}</code>.</p>
+    <button class="btn" type="submit">Spremi model</button>
+  </form>
+  <p class="muted">Ne znaš koji naziv? Pitaj Google koje modele tvoj ključ smije koristiti. Šalje se samo taj upit, bez ikakvog gradiva.</p>
+  <form method="post" action="/postavke/modeli" hx-post="/postavke/modeli" hx-target="#modeli-rezultat" hx-swap="innerHTML" hx-disabled-elt="find button" hx-indicator="#modeli-ceka">
+    <button class="btn" type="submit"{% if not has_key %} disabled{% endif %}>Prikaži dostupne modele</button>
+    <span id="modeli-ceka" class="htmx-indicator muted">Pitam Google…</span>
+  </form>
+  <div id="modeli-rezultat" aria-live="polite">{% include "_modeli.html" %}</div>
+
+  <h3>Provjera veze</h3>
+  <p class="muted">Šalje Googleu samo kratku rečenicu. Nijedna stranica ni gradivo ne odlaze.</p>
+  {% if not library %}<p class="form-error">Biblioteka google-genai nije instalirana. Pokreni <code>uv sync --extra gemini</code>.</p>{% endif %}
+  <form method="post" action="/postavke/provjera" hx-post="/postavke/provjera" hx-target="#veza-rezultat" hx-swap="innerHTML" hx-disabled-elt="find button" hx-indicator="#veza-ceka">
+    <button class="btn" type="submit"{% if not has_key %} disabled{% endif %}>Provjeri vezu</button>
+    <span id="veza-ceka" class="htmx-indicator muted">Provjeravam…</span>
+  </form>
+  <div id="veza-rezultat" aria-live="polite">{% include "_veza_rezultat.html" %}</div>
+</section>
+
+<section class="sec" aria-labelledby="h-poboljsanje">
+  <h2 id="h-poboljsanje">Što bismo mogli poboljšati da ne treba AI</h2>
+  <p class="muted">Kad Gemini pročita stranicu, ovdje se zapiše zašto je trebao: besplatni čitači u aplikaciji nisu bili dovoljno dobri. Što je grupa veća, to bi nas više razveselilo kad bismo je riješili bez AI. Zapisuju se samo stranice koje je čitao Gemini.</p>
+  {% if not groups %}
+  <p>Zapis je prazan: Gemini još nije pročitao nijednu stranicu otkako se zapis vodi.</p>
+  {% else %}
+  <p class="q-total" role="status"><b>{{ log_total }}</b> {{ hr_plural(log_total, 'stranica', 'stranice', 'stranica') }} u zapisu.</p>
+  <ul class="gain-list">
+    {% for g in groups %}
+    <li class="gain">
+      <h3>{{ g.title }}: {{ g.total }} {{ hr_plural(g.total, 'stranica', 'stranice', 'stranica') }}</h3>
+      <p>{{ g.idea }}</p>
+      <p class="muted">Pročitano Geminijem: {{ g.read }}{% if g.failed %}, nije uspjelo: {{ g.failed }}{% endif %}.</p>
+      <details class="rv-box">
+        <summary>Popis stranica</summary>
+        <ul class="q-list">
+          {% for e in g.entries %}
+          <li class="q-item">
+            <span class="q-name">{{ e.file }}, str. {{ e.page }}</span>
+            <span class="muted q-reason">{{ hr_date(e.when.date()) }}, {% if e.outcome == 'read' %}pročitano{% else %}nije pročitano{% if e.note %}: {{ e.note }}{% endif %}{% endif %}{% if e.reason and g.key in ('low_confidence', 'shaky', 'other') %} ({{ e.reason }}){% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% if g.more %}<p class="muted">… i još {{ g.more }} starijih.</p>{% endif %}
+      </details>
+    </li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="/postavke/zapis/ocisti" data-confirm="Obrisati cijeli zapis? To se ne može vratiti.">
+    <button class="btn" type="submit">Očisti zapis</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+<script src="/static/confirm.js" defer></script>
+{% endblock %}

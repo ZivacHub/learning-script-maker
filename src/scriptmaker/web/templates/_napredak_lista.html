@@ -1,0 +1,6 @@
+{# the answer to a lesson goal: the whole list of that lesson, and what depends on it #}
+{% from "_napredak.html" import question_list, unit_roll, total_roll, say as say_line %}
+{{ question_list(unit, predmet_id) }}
+{{ unit_roll(unit, true) }}
+{{ total_roll(progress, true) }}
+{{ say_line(say) }}

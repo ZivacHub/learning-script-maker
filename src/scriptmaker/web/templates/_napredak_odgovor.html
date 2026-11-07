@@ -1,0 +1,6 @@
+{# the answer to one press: the row, and what depends on it (lesson bar, subject bar, the spoken line) #}
+{% from "_napredak.html" import question_row, unit_roll, total_roll, say as say_line %}
+{{ question_row(q, predmet_id) }}
+{{ unit_roll(unit, true) }}
+{{ total_roll(progress, true) }}
+{{ say_line(say) }}

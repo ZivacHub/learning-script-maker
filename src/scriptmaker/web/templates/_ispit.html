@@ -1,0 +1,32 @@
+{# Step 5.9: exam date, the "Počni učiti do" chip and the active switch of a predmet. `back` = where the save returns to. #}
+{% macro chip(c) -%}
+{% if c.chip %}
+<p class="chip chip-{{ c.chip.kind }}"{% if c.chip.example %} data-example{% endif %}>
+  <span class="chip-shape" aria-hidden="true">{{ c.chip.shape }}</span>
+  <span class="chip-text"><b>{{ c.chip.label }}</b>{% if c.chip.detail %}<span class="chip-detail">{{ c.chip.detail }}</span>{% endif %}</span>
+</p>
+{% endif %}
+{%- endmacro %}
+
+{% macro exam_box(c, back, controls=true) -%}
+<div class="subject-exam">
+  {% if c.days and not (c.chip and c.chip.kind in ('pending', 'over')) %}<p class="subject-days">{{ c.days }}</p>{% endif %}
+  {{ chip(c) }}
+  {% if controls %}
+  <div class="exam-forms">
+    <form class="exam-date" method="post" action="/predmet/{{ c.id }}/ispit">
+      <input type="hidden" name="back" value="{{ back }}">
+      <label><span>Datum ispita</span>
+        <input type="date" name="exam_date" id="exam-{{ back }}-{{ c.id }}" value="{{ c.exam_date.isoformat() if c.exam_date else '' }}" min="2000-01-01" max="2100-12-31" required></label>
+      <noscript><button class="btn" type="submit">Spremi datum</button></noscript>
+      {% if c.exam_date %}<button class="btn exam-clear" type="submit" name="ukloni" value="1" formnovalidate>Ukloni datum</button>{% endif %}
+    </form>
+    <form class="exam-active" method="post" action="/predmet/{{ c.id }}/aktivan">
+      <input type="hidden" name="back" value="{{ back }}">
+      <label class="check"><input type="checkbox" name="aktivan"{% if c.active %} checked{% endif %}> Aktivan</label>
+      <noscript><button class="btn" type="submit">Spremi</button></noscript>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{%- endmacro %}

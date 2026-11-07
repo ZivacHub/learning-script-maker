@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% macro role_select(name, current, data_attr='') %}
+<select name="{{ name }}" {{ data_attr|safe }}>
+  {% for value, label in role_labels.items() %}<option value="{{ value }}"{% if value == current %} selected{% endif %}>{{ label }}</option>{% endfor %}
+</select>
+{% endmacro %}
+{% block content %}
+<h1>Provjeri uvoz</h1>
+<p class="lead">
+  Našao sam {{ plan.stats.files_seen }} {{ hr_plural(plan.stats.files_seen, 'datoteku', 'datoteke', 'datoteka') }};
+  za čitanje je {{ plan.stats.to_import }} ({{ human_size(plan.stats.bytes_to_import) }}).
+  Provjeri naziv, cjeline i ulogu svake datoteke, pa pokreni čitanje.
+</p>
+
+{% if running %}
+<div class="notice"><h2>Jedan uvoz se još čita</h2><p>Možeš pripremiti ovaj plan, ali ga pokreni kad prvi završi.</p>
+  <a class="btn" href="/uvoz/posao/{{ running.job_id }}">Pogledaj napredak</a></div>
+{% endif %}
+
+{% if plan.warnings %}
+<div class="notice notice-warn" role="note">
+  <h2>Obrati pažnju</h2>
+  <ul>{% for w in plan.warnings %}<li>{{ w }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<form method="post" action="/uvoz/plan/{{ token }}/potvrdi" class="plan-form">
+  <section class="plan-block" aria-labelledby="p-name">
+    <h2 id="p-name">Predmet</h2>
+    <label class="field">
+      <span>Naziv predmeta</span>
+      <input name="name" type="text" value="{{ plan.predmet_name }}" maxlength="120" required autocomplete="off">
+    </label>
+    {% if known_predmet %}<p class="muted">Predmet s ovim nazivom već postoji: nove datoteke dodaju se u njega, a već uvezene se ne dupliciraju.</p>{% endif %}
+  </section>
+
+  <section class="plan-block" aria-labelledby="p-units">
+    <h2 id="p-units">Cjeline</h2>
+    {% if plan.units %}
+    <ul class="unit-list">
+      {% for u in plan.units %}
+      <li>
+        <label class="field field-row">
+          <span class="unit-no">{{ u.no }}.</span>
+          <input name="unit-{{ u.no }}" type="text" value="{{ u.title }}" maxlength="120" aria-label="Naziv cjeline {{ u.no }}">
+          <span class="muted">{{ u.file_count }} {{ hr_plural(u.file_count, 'datoteka', 'datoteke', 'datoteka') }}</span>
+        </label>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">Nijedna mapa nije nazvana kao cjelina (na primjer „1. Izometrija”), pa će sve ostati bez cjeline.</p>{% endif %}
+  </section>
+
+  <section class="plan-block" aria-labelledby="p-files">
+    <h2 id="p-files">Uloge datoteka</h2>
+    <p class="muted">Uloga kaže čemu datoteka služi: <b>Pitanja</b> su popisi pitanja, <b>Gradivo</b> su predavanja i skripte, <b>Primjeri ispita</b> su stari ispiti, <b>Bilješke</b> su tuđi ili tvoji zapisi. Svaka datoteka ima svoj izbor; izbor mape mijenja sve datoteke u njoj odjednom.</p>
+    {% for g in groups %}
+    <details class="group"{% if g.needs_confirmation or g.single_role is none %} open{% endif %}>
+      <summary>
+        <span class="group-name">{{ g.folder or 'Glavna mapa' }}</span>
+        <span class="muted group-meta">
+          {{ g.rows|length }} {{ hr_plural(g.rows|length, 'datoteka', 'datoteke', 'datoteka') }}{% if g.unit_nos %}, cjelina {{ g.unit_nos|join(', ') }}{% endif %}
+        </span>
+        {% if g.needs_confirmation %}<span class="tag tag-warn">Provjeri ulogu</span>{% endif %}
+      </summary>
+      <div class="group-body">
+        <label class="group-all">
+          <span>Uloga cijele mape</span>
+          <select data-group-role aria-label="Uloga svih datoteka u mapi {{ g.folder or 'Glavna mapa' }}">
+            <option value="mixed"{% if g.single_role is none %} selected{% endif %} disabled>Različito</option>
+            {% for value, label in role_labels.items() %}<option value="{{ value }}"{% if value == g.single_role %} selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </label>
+        <ul class="files">
+          {% for r in g.rows %}
+          <li>
+            <span class="file-name">{{ r.name }}</span>
+            <span class="muted file-meta">{{ human_size(r.file.size) }}, pouzdanost {{ r.file.reliability }} od 5</span>
+            <label class="file-role">
+              <span class="visually-hidden">Uloga datoteke {{ r.name }}</span>
+              {{ role_select('role-' ~ r.index, r.file.role.value, 'data-file-role') }}
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </details>
+    {% endfor %}
+  </section>
+
+  {% if skipped %}
+  <section class="plan-block" aria-labelledby="p-skip">
+    <h2 id="p-skip">Preskočeno ({{ skipped|length }})</h2>
+    <details class="group">
+      <summary><span class="group-name">Pokaži preskočene datoteke</span></summary>
+      <ul class="files skipped">
+        {% for path, why in skipped %}<li><span class="file-name">{{ path }}</span><span class="muted">{{ why }}</span></li>{% endfor %}
+      </ul>
+    </details>
+  </section>
+  {% endif %}
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit"{% if not plan.stats.to_import or running %} disabled{% endif %}>Uvezi i pročitaj</button>
+    <a class="btn" href="/uvoz">Odustani</a>
+  </div>
+  <p class="muted">Čitanje većih skeniranih stranica može trajati nekoliko minuta. Možeš ga pratiti ili otići na drugu stranicu: čitanje se nastavlja dok je aplikacija otvorena.</p>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="/static/import.js" defer></script>
+{% endblock %}

@@ -1,0 +1,90 @@
+/* "Pregled gradiva": cards per concept in the blueprint (Nacrt) look. Added after script.css; tokens only. */
+
+.overview .wrap { max-width: 72rem; padding-bottom: 0; }
+.overview main .wrap { padding-bottom: 5rem; }
+.overview .eyebrow {
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 .4rem;
+}
+.overview .lead { color: var(--ink-2); margin: .5rem 0 0; max-width: 62ch; }
+
+/* masthead */
+.mast { border-bottom: 1px solid var(--rule); background: var(--surface); }
+.mast-in { padding-top: clamp(1.8rem, 6vw, 4rem); padding-bottom: clamp(1.4rem, 4vw, 2.4rem); }
+.mast h1 { margin-bottom: .6rem; }
+.mast .lead { font-size: 1.04rem; }
+
+/* section nav: one scrolling row, counts as small tags */
+nav.sections {
+  position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--rule);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.nav-in { display: flex; gap: 2px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; padding-right: 4rem; }
+.sections a {
+  font-family: var(--font-mono); font-size: .8rem; white-space: nowrap; display: inline-flex; align-items: center; gap: .45rem;
+  min-height: var(--tap); padding: .35rem .8rem; color: var(--ink-2); text-decoration: none; border-bottom: 2px solid transparent;
+  transition: color 120ms var(--ease-out), background-color 120ms var(--ease-out), transform 160ms var(--ease-out);
+}
+.sections a .n { font-size: .7rem; color: var(--ink-2); border: 1px solid var(--rule-2); border-radius: 2px; padding: 0 .3rem; background: var(--paper); }
+.sections a:active { background: var(--surface-2); transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) {
+  .sections a:hover { color: var(--ink); border-bottom-color: var(--accent); background: var(--surface-2); }
+}
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 4rem); }
+
+/* sections and cards */
+.toolbar { margin-top: 1.6rem; }
+.ov-sec { margin: 0 0 3.5rem; }
+.sec-head { border-top: 3px solid var(--accent); padding-top: 1rem; margin-bottom: 1.2rem; }
+.sec-head .eyebrow { color: var(--accent); }
+.sec-head h2 {
+  display: flex; align-items: baseline; gap: .75rem; flex-wrap: wrap; margin: 0; font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(1.3rem, 3vw, 1.8rem); line-height: 1.2; text-wrap: balance;
+}
+.count {
+  font-family: var(--font-mono); font-size: .75rem; font-weight: 400; color: var(--ink-2); border: 1px solid var(--rule-2);
+  padding: .1rem .45rem; border-radius: 2px; letter-spacing: .02em;
+}
+.ov-group { margin: 1.6rem 0 0; }
+.ov-group > .group-title { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+.card {
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius);
+  padding: clamp(.9rem, 2vw, 1.3rem); margin-top: 1rem;
+}
+.card[hidden], .ov-group[hidden], .ov-sec[hidden] { display: none; }
+.card > h3 {
+  display: flex; align-items: baseline; gap: .65rem; margin: 0; font-family: var(--font-display); font-weight: 600;
+  font-size: clamp(1.05rem, 2vw, 1.2rem); line-height: 1.3;
+}
+.card > h3 .cno { font-family: var(--font-mono); font-size: .85em; color: var(--accent); flex: none; }
+.card > h3 .ct { min-width: 0; }  /* one flex item: formulas in a title stay inside the sentence */
+.card > h3 .dot { margin-left: auto; align-self: center; }
+.card > .lead { margin: .35rem 0 .9rem; }
+.card .src { margin-top: .9rem; }
+.card .verbatim, .card .own-block { margin-bottom: 0; }
+.card .none-block { margin: .9rem 0 0; }
+.card:target { animation: flash 1.6s var(--ease-out) 1; }
+@media (prefers-reduced-motion: reduce) {
+  .sections a { transition: none; }
+  .sections a:active { transform: none; }
+  .card:target { animation: none; }
+}
+
+body.overview .study { padding-left: 0; }
+[data-dense] .mast-in { padding-top: 1.4rem; padding-bottom: 1rem; }
+[data-dense] .ov-sec { margin-bottom: 2.2rem; }
+[data-dense] .ov-group { margin-top: 1rem; }
+[data-dense] .card { padding: .75rem .9rem; margin-top: .6rem; }
+[data-dense] .card > .lead { margin-bottom: .6rem; }
+
+@media (max-width: 40rem) {
+  html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 4rem); }
+  .nav-in { padding-left: 1.25rem; }
+}
+
+@media print {
+  nav.sections { display: none !important; }
+  .mast { background: none; }
+  .card { break-inside: avoid; background: none; }
+  .ov-sec { break-before: auto; }
+  .sec-head { break-after: avoid; }
+}

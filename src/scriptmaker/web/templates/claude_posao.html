@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}/claude">Claude predlaže odgovore</a></p>
+<div class="page-head">
+  <h1>Paket {{ pack.job_id }}</h1>
+</div>
+<p class="lead">{{ pack.questions }} {{ hr_plural(pack.questions, 'pitanje', 'pitanja', 'pitanja') }}, {{ pack.pages }} {{ hr_plural(pack.pages, 'stranica', 'stranice', 'stranica') }} gradiva{% if pack.pictures %}, {{ pack.pictures }} {{ hr_plural(pack.pictures, 'slika', 'slike', 'slika') }}{% endif %}. Odgovori: {% if pack.strictness == 'verbatim_only' %}samo doslovno{% else %}doslovno, a vlastiti primjer samo ako ga u gradivu nema{% endif %}.</p>
+
+<section class="sec claude-pack" aria-labelledby="h-mapa">
+  <h2 id="h-mapa">1. Mapa za Claudea</h2>
+  <p>Mapa je napravljena ovdje (kopiraj putanju):</p>
+  <p><code class="path">{{ pack.folder }}</code></p>
+  <p>Reci Claudeu u Claude Code razgovoru na primjer:</p>
+  <blockquote>Otvori mapu „{{ pack.folder }}”, pročitaj JOB.md i napiši answers.json u tu mapu.</blockquote>
+</section>
+
+<section class="sec" aria-labelledby="h-uvoz">
+  <h2 id="h-uvoz">2. Uvezi odgovore</h2>
+  <p class="muted">{% if pack.has_answers %}Datoteka answers.json je u mapi.{% else %}U mapi još nema datoteke answers.json.{% endif %} Uvoz možeš ponoviti: pitanja kojima si ti već odlučio odgovor ne mijenjaju se nikad.</p>
+  <form method="post" action="/predmet/{{ predmet.id }}/claude/posao/{{ pack.job_id }}/uvezi">
+    <button class="btn btn-primary" type="submit">Uvezi odgovore</button>
+  </form>
+</section>
+
+{% if pack.report %}
+{% set r = pack.report %}
+<section class="sec" aria-labelledby="h-rezultat">
+  <h2 id="h-rezultat">Što je uvoz napravio</h2>
+  {% if r.error %}
+  <div class="notice notice-error" role="alert"><p>{{ r.error }}</p><p class="muted">Ništa nije promijenjeno.</p></div>
+  {% else %}
+  <ul class="summary">
+    <li>Spremljeno kao „Claudeov odabir”: <b>{{ r.saved }}</b>. Provjera je našla citat na navedenoj stranici; pogledaj ih na pregledu pitanja, a možeš ih promijeniti.{% if r.saved_unchecked %} Od toga <b>{{ r.saved_unchecked }}</b> {{ hr_plural(r.saved_unchecked, 'odgovor je s rukopisa', 'odgovora su s rukopisa', 'odgovora je s rukopisa') }}: u skripti piše „nije provjereno”.{% endif %}</li>
+    <li>Čeka tvoj OK: <b>{{ r.waiting }}</b>{% if waiting %} (<a href="/predmet/{{ predmet.id }}/claude/cekaju">otvori popis</a>){% endif %}. To su prijedlozi s rukom pisanih stranica, a njih samo ti možeš potvrditi.</li>
+    <li>Claude nije našao odgovor u gradivu: <b>{{ r.none }}</b>. Ta pitanja ostaju neodlučena.</li>
+    <li>Pitanja koja datoteka uopće ne spominje: <b>{{ r.not_returned }}</b>.</li>
+    <li>Preskočeno jer si ih ti već odlučio: <b>{{ r.skipped }}</b>.</li>
+    <li>Objašnjenja spremljena odvojeno (označena „AI, nije iz gradiva”): <b>{{ r.explanations }}</b>.</li>
+  </ul>
+  {% if r.failures %}
+  <div class="notice notice-warn" role="note">
+    <h3>{{ r.failures|length }} {{ hr_plural(r.failures|length, 'prijedlog nije prošao', 'prijedloga nije prošlo', 'prijedloga nije prošlo') }} provjeru</h3>
+    <p class="muted">Ništa od ovoga nije spremljeno. Ta pitanja ostaju neodlučena i možeš ih riješiti sam na pregledu pitanja.</p>
+    <ul class="q-list">
+      {% for f in r.failures %}
+      <li class="q-item">
+        <p class="q-wording">{% if f.question %}„{{ f.question }}”{% else %}Pitanje {{ f.question_id }}{% endif %}</p>
+        <p>{{ f.reason }}</p>
+        {% if f.quote %}<p class="muted">Citat: „{{ f.quote }}”</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% endif %}
+</section>
+{% endif %}
+<p><a class="btn" href="/predmet/{{ predmet.id }}/pregled">Pregled pitanja</a></p>
+{% endblock %}

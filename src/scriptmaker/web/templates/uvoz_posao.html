@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Čitanje gradiva</h1>
+<p class="lead">Predmet: <b>{{ job.name }}</b></p>
+{% include "_posao_stanje.html" %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+{% endblock %}

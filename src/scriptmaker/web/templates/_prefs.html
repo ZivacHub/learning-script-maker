@@ -1,0 +1,21 @@
+{# The two kinds of control on "Izgled skripte". seg = a short choice shown as a row of buttons; its hints stay in the
+   page for screen readers and as a tooltip. #}
+{% macro radios(name, legend, choices, current, seg=false) %}
+<fieldset class="pref-group{% if seg %} is-seg{% endif %}">
+  <legend>{{ legend }}</legend>
+  <div class="pref-options">
+  {% for value, label, hint in choices %}
+  <label class="pref-choice"{% if seg %} title="{{ hint }}"{% endif %}>
+    <input type="radio" name="{{ name }}" value="{{ value }}"{% if value == current %} checked{% endif %}>
+    <span class="pref-text"><b>{{ label }}</b><span class="muted">{{ hint }}</span></span>
+  </label>
+  {% endfor %}
+  </div>
+</fieldset>
+{% endmacro %}
+{% macro toggle(name, label, hint, checked) %}
+<label class="pref-choice pref-switch">
+  <input type="checkbox" name="{{ name }}"{% if checked %} checked{% endif %}>
+  <span class="pref-text"><b>{{ label }}</b><span class="muted">{{ hint }}</span></span>
+</label>
+{% endmacro %}

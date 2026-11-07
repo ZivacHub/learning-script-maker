@@ -1,0 +1,53 @@
+{# The progress part of the page. While the job runs it asks for itself again every 2 seconds (HTMX); the finished
+   versions carry no trigger, so the page stops asking. #}
+{% set pct = (job.fraction * 100)|round|int %}
+{% set base = "/predmet/" ~ predmet_id ~ "/automatski" %}
+<section id="posao" class="job job-{{ job.state }}" aria-live="polite"
+  {% if job.running %}hx-get="{{ base }}/posao/{{ job.job_id }}/stanje" hx-trigger="every 2s" hx-swap="outerHTML"{% endif %}>
+
+  {% if job.state == 'running' %}
+  <h2>{{ job.who|capitalize }} predlaže odgovore{% if job.cancel %}: prekidam{% endif %}</h2>
+  <div class="bar" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}">
+    <span id="posao-fill" class="bar-fill" style="--frac: {{ '%.4f'|format(job.fraction) }}"></span>
+  </div>
+  <p class="job-count">Pitanja: <b>{{ job.done }}</b> od <b>{{ job.total }}</b>, prošlo {{ duration(job.seconds) }}. Spremljeno do sada: <b>{{ job.saved }}</b>.</p>
+  {% if job.current %}<p class="muted job-current">Sada: {{ job.current }}</p>{% endif %}
+  <p class="muted">Što prođe provjeru sprema se odmah, u manjim skupinama. Možeš zatvoriti ovu stranicu: rad teče dok je aplikacija otvorena.</p>
+  <button class="btn" type="button" hx-post="{{ base }}/posao/{{ job.job_id }}/prekini" hx-target="#posao" hx-swap="outerHTML"
+    {% if job.cancel %}disabled{% endif %}>Prekini</button>
+
+  {% elif job.state == 'failed' %}
+  <h2>Rad nije uspio</h2>
+  <p role="alert">{{ job.error or 'Nešto je pošlo po zlu.' }}</p>
+  <p><a class="btn" href="{{ base }}">Natrag na odabir</a></p>
+
+  {% else %}
+  <h2>{% if job.state == 'canceled' %}Prekinuto{% elif job.stopped %}Zaustavljeno{% else %}Gotovo{% endif %}</h2>
+  <div class="bar" role="progressbar" aria-label="Napredak" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}">
+    <span class="bar-fill" style="--frac: {{ '%.4f'|format(job.fraction) }}"></span>
+  </div>
+  <ul class="summary">
+    <li>Pitanja pregledano: <b>{{ job.done }}</b> od <b>{{ job.total }}</b>, za {{ duration(job.seconds) }} ({{ job.who }}, model {{ job.model }}).</li>
+    <li>Spremljeno kao odgovor (doslovno, provjereno): <b>{{ job.saved }}</b>{% if job.saved_unchecked %}, od toga s rukopisa, označeno „nije provjereno”: <b>{{ job.saved_unchecked }}</b>{% endif %}.</li>
+    {% if job.waiting %}<li>Čeka tvoj OK (nađeno samo na rukopisu): <b>{{ job.waiting }}</b>. <a href="/predmet/{{ predmet_id }}/claude/cekaju">Pogledaj prijedloge</a>.</li>{% endif %}
+    <li>Nijedna stranica ne odgovara, pitanje ostaje otvoreno: <b>{{ job.none }}</b>.</li>
+    <li>Citat nije prošao provjeru (ne stoji na stranici) pa nije spremljen: <b>{{ job.refused }}</b>.</li>
+    {% if job.left %}<li>Nije pokušano: <b>{{ job.left }}</b> {{ hr_plural(job.left, 'pitanje', 'pitanja', 'pitanja') }}. Ostaju otvorena; možeš pokrenuti ponovno.</li>{% endif %}
+  </ul>
+  {% if job.stopped %}
+  <div class="notice notice-warn" role="note">
+    <h2>Zašto je stalo</h2>
+    <p>{{ job.stop_message }}</p>
+    {% if job.stopped == 'daily' %}<p class="muted">Ništa nije izgubljeno: što je spremljeno ostaje. Možeš pokrenuti ponovno sutra ili odabrati model na ovom računalu.</p>{% endif %}
+  </div>
+  {% endif %}
+  {% if job.problems %}
+  <div class="notice notice-warn" role="note">
+    <h2>{{ job.problems|length }} {{ hr_plural(job.problems|length, 'pitanje nije riješeno', 'pitanja nisu riješena', 'pitanja nije riješeno') }}</h2>
+    <ul>{% for p in job.problems %}<li>{{ p.question }}: {{ p.reason }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+  <p>Spremljeni odgovori nose oznaku da ih je predložio stroj. Pogledaj ih na pregledu pitanja i promijeni što treba.</p>
+  <p><a class="btn btn-primary" href="/predmet/{{ predmet_id }}">Natrag na predmet</a></p>
+  {% endif %}
+</section>

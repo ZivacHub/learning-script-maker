@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}">{{ predmet.name }}</a></p>
+<div class="page-head">
+  <h1>Za provjeru</h1>
+</div>
+<p class="lead">Ovdje je na jednom mjestu sve što još čeka tvoj pogled: stranice koje je računalo pročitalo nesigurno i ispitne rečenice koje aplikacija nije znala smjestiti.</p>
+{% if info == 'smjesteno' %}<p class="notice-line" role="status">Rečenica je smještena uz pitanje.</p>
+{% elif info == 'ne-broji' %}<p class="notice-line" role="status">Rečenica se neće brojati.</p>
+{% elif info == 'vraceno' %}<p class="notice-line" role="status">Rečenica je vraćena u red.</p>
+{% elif info == 'zalijepljeno' %}<p class="notice-line" role="status">Ispitni tekst je spremljen i brojanje je ponovno izračunato.</p>{% endif %}
+
+<div id="provjera-region" data-source="/predmet/{{ predmet.id }}/provjera/lista" aria-live="polite"
+     hx-get="/predmet/{{ predmet.id }}/provjera/lista" hx-trigger="load" hx-swap="innerHTML">
+  {% include "_cjeline_skeleton.html" %}
+</div>
+<noscript><p class="muted">Za popis uključi JavaScript u pregledniku.</p></noscript>
+<template id="provjera-skeleton">{% include "_cjeline_skeleton.html" %}</template>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+<script src="/static/queue.js" defer></script>
+{% endblock %}

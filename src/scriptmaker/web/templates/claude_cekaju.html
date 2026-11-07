@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<p class="crumb"><a href="/predmet/{{ predmet.id }}/claude">Claude predlaže odgovore</a></p>
+<div class="page-head">
+  <h1>Čeka tvoj OK</h1>
+</div>
+<p class="lead">Ovo su prijedlozi s rukom pisanih stranica. Računalo je rukopis pročitalo samo grubo, pa ih samo ti možeš potvrditi: otvori pitanje, usporedi citat sa slikom stranice, pa prihvati ili odbaci. Prihvaćeno postaje doslovan odgovor.</p>
+{% if error %}<div class="notice notice-error" role="alert"><p>{{ error }}</p></div>{% endif %}
+{% if not rows %}
+<p class="muted">Ništa ne čeka.</p>
+{% else %}
+<ul class="q-list">
+  {% for r in rows %}
+  <li class="q-item">
+    <p class="q-wording">{{ r.unit_no }}.{{ r.no }} „{{ r.text }}”</p>
+    <p class="muted">{{ r.file }}, str. {{ r.page }}</p>
+    <blockquote>{{ r.quote }}</blockquote>
+    {% if r.explanation %}<details class="rv-explain"><summary>Objasni jednostavnije</summary><p><span class="tag">AI, nije iz gradiva</span></p><p>{{ r.explanation }}</p></details>{% endif %}
+    <div class="q-buttons">
+      <a class="btn" href="/predmet/{{ predmet.id }}/pregled?q={{ r.question_id }}">Otvori pitanje</a>
+      <form method="post" action="/predmet/{{ predmet.id }}/claude/cekaju/{{ r.question_id }}/prihvati"><button class="btn btn-primary" type="submit">Prihvati kao doslovno</button></form>
+      <form method="post" action="/predmet/{{ predmet.id }}/claude/cekaju/{{ r.question_id }}/odbaci"><button class="btn" type="submit">Odbaci</button></form>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

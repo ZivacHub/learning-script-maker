@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Novi predmet</h1>
+<p class="lead">Odaberi mapu ili zip s gradivom. Aplikacija predloži cjeline i uloge datoteka, a ti ih provjeriš prije čitanja. Ništa ne napušta ovo računalo.</p>
+
+{% if running %}
+<div class="notice">
+  <h2>Jedan uvoz se još čita</h2>
+  <p>Novi uvoz može početi kad ovaj završi.</p>
+  <a class="btn" href="/uvoz/posao/{{ running.job_id }}">Pogledaj napredak</a>
+</div>
+{% endif %}
+{% if error %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+
+<div class="choices">
+  <section class="choice" aria-labelledby="c-mapa">
+    <h2 id="c-mapa">Mapa</h2>
+    <p>Otvara se Windows prozor u kojem odabereš mapu.</p>
+    <form method="post" action="/uvoz/mapa" hx-post="/uvoz/mapa" hx-target="#pick-result" hx-swap="innerHTML"
+          hx-indicator="#pick-wait" hx-disabled-elt="find button">
+      <button class="btn btn-primary" type="submit">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.3a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>
+        Odaberi mapu
+      </button>
+      <span id="pick-wait" class="wait htmx-indicator" role="status">Čekam da odabereš mapu u prozoru…</span>
+    </form>
+    <div id="pick-result" aria-live="polite"></div>
+  </section>
+
+  {% if shortcuts %}
+  <section class="choice" aria-labelledby="c-precac">
+    <h2 id="c-precac">Brzo učitaj</h2>
+    <p>Mape koje si već spremio.</p>
+    <ul class="quick-list">
+      {% for s in shortcuts %}
+      <li><a class="btn" href="/uvoz?precac={{ loop.index0 }}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2.2h7a2 2 0 0 1 2 2v7.3a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>
+        {{ s.name }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="choice" aria-labelledby="c-zip">
+    <h2 id="c-zip">Zip</h2>
+    <p>Datoteka .zip s gradivom. Raspakira se na ovom računalu. Datoteke .rar nisu podržane.</p>
+    <form method="post" action="/uvoz/zip" enctype="multipart/form-data" class="zip-form">
+      <label class="visually-hidden" for="zip-file">Zip datoteka</label>
+      <input id="zip-file" name="file" type="file" accept=".zip,application/zip" required>
+      <button class="btn" type="submit">Učitaj zip</button>
+    </form>
+  </section>
+</div>
+<p><a href="/">Natrag na predmete</a></p>
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/htmx.min.js"></script>
+{% endblock %}

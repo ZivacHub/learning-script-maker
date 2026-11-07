@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "predmet": "Primjer predmet",
+  "title": "Pitanja i odgovori iz materijala",
+  "subtitle": "Sintetički primjer za testove",
+  "lang": "hr",
+  "preferences": {
+    "template": "qa",
+    "theme": "papir",
+    "strictness": "verbatim_and_own",
+    "focus": "all",
+    "default_target_passes": 2
+  },
+  "units": [
+    {
+      "id": "u1",
+      "no": 1,
+      "title": "Izometrije ravnine",
+      "kicker": "Lekcija 1",
+      "accent_index": 1,
+      "groups": [
+        {
+          "title": "a) Definicije",
+          "items": [
+            {
+              "id": "u1q1",
+              "no": 1,
+              "question": "Definirajte osnu simetriju.",
+              "status": "verbatim",
+              "answer_blocks": [
+                {"kind": "text", "text": "Osna simetrija s obzirom na pravac $p$ je preslikavanje ravnine koje svakoj točki $T$ pridružuje točku $T'$."},
+                {"kind": "formula", "text": "|TN| = |T'N|"}
+              ],
+              "source": {
+                "file": "Materijali/1. Primjer/skripta_primjer.pdf",
+                "page": 1,
+                "quote": "Osna simetrija s obzirom na pravac p je preslikavanje ravnine",
+                "verify_score": 97.5
+              },
+              "weight": 3
+            },
+            {
+              "id": "u1q2",
+              "no": 2,
+              "question": "Navedi primjer osno simetričnog lika.",
+              "status": "own",
+              "answer_blocks": [{"kind": "text", "text": "Jednakokračan trokut: os simetrije je simetrala osnovice."}]
+            },
+            {
+              "id": "u1q3",
+              "no": 3,
+              "question": "Definirajte inverziju.",
+              "status": "none"
+            }
+          ]
+        },
+        {
+          "title": "b) Svojstva",
+          "items": [
+            {
+              "id": "u1q4",
+              "no": 4,
+              "question": "Nabrojite svojstva rotacije.",
+              "status": "verbatim",
+              "answer_blocks": [{"kind": "list", "items": ["čuva udaljenosti", "čuva kutove", "čuva orijentaciju"]}],
+              "source": {
+                "file": "Bilješke/stranica_2.jpeg",
+                "page": 1,
+                "quote": "Rotacija je izometrija.",
+                "handwritten": true
+              },
+              "target_passes": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "u2",
+      "no": 2,
+      "title": "Kompleksni brojevi",
+      "accent_index": 2,
+      "groups": []
+    }
+  ]
+}

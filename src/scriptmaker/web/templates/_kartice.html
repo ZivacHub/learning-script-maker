@@ -1,0 +1,19 @@
+{% from "_kartica.html" import card %}
+{% if dashboard is none %}
+<div class="notice notice-error" role="alert">
+  <h2>Predmeti se nisu učitali</h2>
+  <p>Aplikacija nije mogla pročitati bazu podataka. Tvoji podaci nisu promijenjeni. Pokušaj ponovno; ako se ponovi, pogledaj prozor u kojem je aplikacija pokrenuta.</p>
+  <button class="btn" type="button" data-retry>Pokušaj ponovno</button>
+</div>
+{% elif not dashboard.cards %}
+<div class="notice">
+  <h2>Još nema predmeta</h2>
+  <p>Predmet nastaje kad učitaš mapu ili zip s gradivom. Aplikacija predloži cjeline i uloge datoteka, a ti ih potvrdiš u jednoj tablici. Počni gumbom Novi predmet.</p>
+</div>
+{% else %}
+<ul class="subjects">
+  {% for c in dashboard.cards %}
+  {{ card(c) }}
+  {% endfor %}
+</ul>
+{% endif %}

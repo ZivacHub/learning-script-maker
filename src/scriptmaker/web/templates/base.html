@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{ title }}</title>
+<script>
+  /* apply the saved look/theme before first paint (same idea as the reference scripts) */
+  try {
+    var m = localStorage.getItem('sm-theme'); if (m === 'dark' || m === 'light') document.documentElement.setAttribute('data-theme', m);
+    var l = localStorage.getItem('sm-look'); if (l === 'papir' || l === 'nacrt') document.documentElement.setAttribute('data-look', l);
+  } catch (e) {}
+</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231F4E79'/%3E%3Cpath d='M10 8h9a4 4 0 0 1 4 4v12H14a4 4 0 0 1-4-4z' fill='none' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/tokens.css">
+<link rel="stylesheet" href="/static/app.css">
+{% block page_transition %}<style>@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }</style>{% endblock %}
+</head>
+<body>
+<a class="skip" href="#main">Preskoči na sadržaj</a>
+<header class="shell-bar">
+  <div class="shell-bar-in">
+    <a class="brand" href="/">Learning Script Maker</a>
+    <nav class="shell-nav" aria-label="Glavna navigacija">
+      <a href="/"{% if active == 'home' %} aria-current="page"{% endif %}>Početna</a>
+      <a href="/postavke"{% if active == 'postavke' %} aria-current="page"{% endif %}>Postavke</a>
+      {% if dev %}<a href="/design/tokens"{% if active == 'tokens' %} aria-current="page"{% endif %}>Dizajn tokeni</a>{% endif %}
+    </nav>
+    <button class="icon-btn" id="theme-btn" type="button" aria-label="Prebaci svijetli/tamni način" title="Prebaci svijetli/tamni način">
+      <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.3M12 19.2v2.3M2.5 12h2.3M19.2 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+    </button>
+  </div>
+</header>
+<main id="main" class="page{% block page_class %}{% endblock %}">
+{% block content %}{% endblock %}
+</main>
+<script>
+  (function () {
+    var root = document.documentElement;
+    var btn = document.getElementById('theme-btn');
+    function isDark() {
+      var t = root.getAttribute('data-theme');
+      return t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    btn.addEventListener('click', function () {
+      var next = isDark() ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('sm-theme', next); } catch (e) {}
+    });
+  })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

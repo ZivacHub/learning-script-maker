@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "predmet": "Primjer programiranje",
+  "title": "Čist kôd na primjerima",
+  "subtitle": "Sintetički primjer: svako pravilo pokazano kao kôd koji ne valja i kôd koji valja.",
+  "lang": "hr",
+  "preferences": {"template": "overview", "theme": "nacrt", "strictness": "verbatim_and_own", "focus": "all"},
+  "units": [
+    {
+      "id": "u1", "no": 1, "title": "Smislena imena", "kicker": "PR1 · dio 1", "accent_index": 1,
+      "description": "Najveći dio kôda su imena. Cilj: kôd čitljiv čovjeku, ne samo prevoditelju.",
+      "groups": [
+        {"title": "Imena varijabli", "items": [
+          {"id": "c1", "no": 1, "question": "Ime otkriva namjeru", "lead": "Ako moraš pitati što je ovo, ime je palo.",
+           "status": "verbatim",
+           "answer_blocks": [
+             {"kind": "text", "text": "Ime varijable kaže što sadrži i u kojoj jedinici."},
+             {"kind": "compare", "panes": [
+               {"tone": "bad", "label": "ne otkriva ništa", "kind": "code", "text": "int d;\ndouble sp;\nint s;"},
+               {"tone": "good", "label": "mjera i jedinica", "kind": "code", "text": "int elapsedDays;\ndouble averageSpeedKmh;\nint primeSum;"}
+             ]}
+           ],
+           "source": {"file": "Materijali/PR1_predavanje.pdf", "page": 4, "quote": "Ime treba otkriti namjeru: što, zašto i kako se koristi."}},
+          {"id": "c2", "no": 2, "question": "Usporedba ne smije izgledati kao oznaka", "status": "own",
+           "answer_blocks": [
+             {"kind": "text", "text": "Uvjet s više znakova < i > čitljiviji je kad ima ime."},
+             {"kind": "code", "caption": "C#", "text": "if (a < b && c > d) { Run(); }\nbool isInRange = a < b && c > d;\nif (isInRange) Run();"}
+           ]},
+          {"id": "c3", "no": 3, "question": "Bez dezinformacija", "status": "none"}
+        ]},
+        {"title": "Imena funkcija", "items": [
+          {"id": "c4", "no": 4, "question": "Glagol za radnju", "status": "own",
+           "answer_blocks": [
+             {"kind": "compare", "panes": [
+               {"tone": "bad", "label": "imenica", "kind": "code", "text": "int Data(int x)"},
+               {"tone": "good", "label": "glagol", "kind": "code", "text": "int CountItems(int x)"},
+               {"tone": "neutral", "label": "napomena", "kind": "text", "text": "Funkcija radi nešto, pa se zove kao radnja."}
+             ]}
+           ]}
+        ]}
+      ]
+    },
+    {
+      "id": "u2", "no": 2, "title": "Složenost", "accent_index": 2,
+      "groups": [
+        {"title": "Procjena", "items": [
+          {"id": "c5", "no": 1, "question": "Sortiranje usporedbom", "lead": "Nijedno ne može brže od donje međe.",
+           "status": "verbatim",
+           "answer_blocks": [
+             {"kind": "text", "text": "Najbolji opći algoritmi rade u vremenu $O(n \\log n)$."},
+             {"kind": "formula", "text": "T(n) = \\Theta(n \\log n)"},
+             {"kind": "hint", "caption": "Kako procijeniti", "text": "Prebroji ugniježđene petlje.\n\nSvaka ugniježđena petlja množi složenost."}
+           ],
+           "source": {"file": "Materijali/PR2_predavanje.pdf", "page": 11, "quote": "Sortiranje usporedbom ima donju među n log n."}}
+        ]}
+      ]
+    }
+  ]
+}

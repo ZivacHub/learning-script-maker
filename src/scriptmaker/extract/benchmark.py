@@ -1,0 +1,202 @@
+"""Benchmark: how well does each reader read pages whose correct text is known?
+
+    uv run python -m scriptmaker.extract.benchmark            # measures and rewrites docs/ocr-benchmark.md
+
+Labelled pages live in a private file (`data/ground_truth/printed_lines.json`, never committed): each entry names a
+source file in the sample folder, the page, a kind, and the correct lines. Only numbers are written to the
+report; the text of the pages stays private. The hand-written analysis sits in `docs/ocr-benchmark-notes.md`
+and is appended to the generated table, so regenerating never loses it. A reader added later (a handwriting
+model) only has to be added to `default_configs`; it then appears in the table.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import statistics
+import tempfile
+import time
+from collections import defaultdict
+from dataclasses import dataclass
+from datetime import date
+from pathlib import Path
+
+from PIL import Image
+
+from ..config import PROJECT_ROOT
+from . import source_info_for
+from .metrics import line_cer
+from .ocr import RapidOcrEngine, TesseractEngine
+from .ocr.pipeline import read_page
+from .ocr.repair import EngineStep
+from .preprocess import flatten_illumination, load_oriented, preprocess_image
+from .render import render_pdf_pages
+
+DEFAULT_TRUTH = PROJECT_ROOT / "data" / "ground_truth" / "printed_lines.json"
+DEFAULT_OUT = PROJECT_ROOT / "docs" / "ocr-benchmark.md"
+DEFAULT_NOTES = PROJECT_ROOT / "docs" / "ocr-benchmark-notes.md"
+
+
+@dataclass(frozen=True)
+class Config:
+    name: str
+    step: EngineStep
+
+
+@dataclass
+class LabelledPage:
+    key: str
+    kind: str
+    handwritten: bool
+    image: Image.Image
+    lines: list[str]
+
+
+@dataclass(frozen=True)
+class Row:
+    kind: str
+    handwritten: bool
+    config: str
+    pages: int
+    lines: int
+    mean_cer: float
+    exact: int
+    seconds_per_page: float
+
+
+def default_configs() -> list[Config]:
+    """Every way of running the readers that is available here (add new engines here)."""
+    configs: list[Config] = []
+    tesseract, rapid = TesseractEngine(psm=4), RapidOcrEngine()
+    if tesseract.available()[0]:
+        configs += [
+            Config("Tesseract 5.4 hrv+eng, whole page", EngineStep(tesseract)),
+            Config("Tesseract, handout panels + flattened light", EngineStep(tesseract, split=True, flatten=True)),
+        ]
+    if rapid.available()[0]:
+        configs += [
+            Config("RapidOCR 3.10, whole page", EngineStep(rapid)),
+            Config("RapidOCR, handout panels", EngineStep(rapid, split=True)),
+        ]
+    return configs
+
+
+def load_labelled_pages(sample_dir: Path, truth_file: Path, workdir: Path) -> list[LabelledPage]:
+    truth = json.loads(truth_file.read_text(encoding="utf-8"))
+    pages = []
+    for key, entry in truth.items():
+        if key.startswith("_"):
+            continue
+        source = sample_dir / entry["source"]
+        if source.suffix.casefold() == ".pdf":
+            rendered = render_pdf_pages(source, source_info_for(source, key), workdir, [entry["page"]])
+            image = Image.open(rendered[entry["page"]]).convert("RGB")
+        else:
+            image = preprocess_image(load_oriented(source)).image
+        pages.append(LabelledPage(key, entry["kind"], bool(entry.get("handwritten")), image, entry["lines"]))
+    return pages
+
+
+def run_benchmark(pages: list[LabelledPage], configs: list[Config]) -> list[Row]:
+    grouped: dict[tuple[str, bool, str], list[tuple[float, int, int, float]]] = defaultdict(list)
+    for page in pages:
+        for config in configs:
+            image = flatten_illumination(page.image).convert("RGB") if config.step.flatten else page.image
+            started = time.perf_counter()
+            result = read_page(image, config.step.engine, split=config.step.split)
+            seconds = time.perf_counter() - started
+            report = line_cer(page.lines, [ln.text for ln in result.lines])
+            grouped[(page.kind, page.handwritten, config.name)].append(
+                (report.mean_cer * len(page.lines), len(page.lines), report.exact, seconds)
+            )
+    rows = []
+    for (kind, handwritten, name), items in grouped.items():
+        total_lines = sum(n for _, n, _, _ in items)
+        rows.append(
+            Row(
+                kind,
+                handwritten,
+                name,
+                len(items),
+                total_lines,
+                sum(c for c, _, _, _ in items) / total_lines,
+                sum(e for _, _, e, _ in items),
+                statistics.mean(s for _, _, _, s in items),
+            )
+        )
+    order = {c.name: i for i, c in enumerate(configs)}
+    return sorted(rows, key=lambda r: (r.handwritten, r.kind, order[r.config]))
+
+
+def render_markdown(rows: list[Row], notes: str = "") -> str:
+    out = [
+        "# OCR benchmark",
+        "",
+        f"Generated {date.today().isoformat()} by `uv run python -m scriptmaker.extract.benchmark`. "
+        "Do not edit this file by hand: the numbers are regenerated, the analysis lives in "
+        "`docs/ocr-benchmark-notes.md` and is appended below.",
+        "Only numbers are listed; the text of the pages is private study material and is never committed.",
+        "",
+        "Score = mean character error rate of the best-matching stretch of the reader's output for each correct line, "
+        "order-independent (`extract/metrics.py: line_cer`); case and diacritics count; lower is better. "
+        "CPU only, one run each.",
+        "",
+    ]
+    for handwritten in (False, True):
+        subset = [r for r in rows if r.handwritten is handwritten]
+        out.append("## Handwritten pages" if handwritten else "## Printed pages")
+        out.append("")
+        if not subset:
+            out.append(
+                "Not measured yet: no labelled handwritten pages and no handwriting reader "
+                "(step 2.7, parked by decision D15)."
+                if handwritten
+                else "No labelled pages found."
+            )
+            out.append("")
+            continue
+        out.append("| Kind of page | Reader | Pages | Lines | Mean CER | Exact lines | Seconds per page |")
+        out.append("|---|---|---|---|---|---|---|")
+        for r in subset:
+            exact = f"{r.exact} of {r.lines}"
+            cer, seconds = f"{r.mean_cer:.1%}", f"{r.seconds_per_page:.1f}"
+            cells = [r.kind, r.config, str(r.pages), str(r.lines), cer, exact, seconds]
+            out.append("| " + " | ".join(cells) + " |")
+        out.append("")
+    if notes.strip():
+        out += ["---", "", notes.strip(), ""]
+    return "\n".join(out)
+
+
+def build_report(sample_dir: Path, truth_file: Path, configs: list[Config], notes: str = "") -> str:
+    with tempfile.TemporaryDirectory() as tmp:
+        pages = load_labelled_pages(sample_dir, truth_file, Path(tmp))
+        rows = run_benchmark(pages, configs)
+    return render_markdown(rows, notes)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Measure the OCR readers on labelled pages.")
+    parser.add_argument("--sample", type=Path, default=Path(os.environ.get("SM_SAMPLE_DIR", "")) or None)
+    parser.add_argument("--truth", type=Path, default=DEFAULT_TRUTH)
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--notes", type=Path, default=DEFAULT_NOTES)
+    args = parser.parse_args(argv)
+    if not args.sample or not args.sample.is_dir():
+        parser.error("set --sample or SM_SAMPLE_DIR to the Sample_Folder folder")
+    if not args.truth.is_file():
+        parser.error(f"no labelled pages at {args.truth}")
+    configs = default_configs()
+    if not configs:
+        parser.error("no OCR reader is available")
+    notes = args.notes.read_text(encoding="utf-8") if args.notes.is_file() else ""
+    report = build_report(args.sample, args.truth, configs, notes)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(report, encoding="utf-8", newline="\n")
+    print(f"report written to {args.out}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

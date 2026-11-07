@@ -1,0 +1,48 @@
+# Default import rules. Matching is case- and diacritic-insensitive ("Mreže" matches "mreze").
+# A per-predmet copy of these rules (Ivan's corrections from the confirm table) is stored in the app database.
+
+# Folder (or file) names containing one of these words decide the role. The deepest matching folder wins.
+roles:
+  - role: questions
+    folder: [pitanja, pitanje, questions, question, ispitna pitanja]
+    filename: [pitanja, pitanje, questions]
+  - role: exam_samples
+    folder: [ispit, kolokvij, exam, zadatak za vjezbu]
+    filename: []
+  - role: materials
+    folder: [materijal, prezentacij, slides, predavanj, gradivo, lekcij, skripta]
+    filename: [prezentacij, predavanj, skripta]
+
+# A folder that matches nothing (e.g. a person's name) is treated as this role and flagged for confirmation.
+unknown_folder_role: notes
+
+# Never imported, never reported.
+ignore_names: [thumbs.db, .ds_store, desktop.ini]
+ignore_dirs: [__macosx, .git, .svn, node_modules, .idea, .vscode]
+
+# Files with these name stems are rules for the AI/hand-off (UPUTE.txt style), not study material.
+instruction_names: [upute, instructions, readme]
+
+# Extension -> kind. Anything else is skipped with a reason shown in the confirm table.
+kinds:
+  pdf: [.pdf]
+  docx: [.docx]
+  pptx: [.pptx]
+  image: [.jpg, .jpeg, .png, .webp, .bmp, .tif, .tiff]
+  text: [.txt, .md]
+
+skip_reasons:
+  ".rar": rar_not_supported
+  ".7z": archive_not_supported
+  ".zip": nested_zip_not_extracted
+  ".doc": legacy_office_convert_to_docx
+  ".ppt": legacy_office_convert_to_pptx
+  ".xls": spreadsheet_not_supported
+  ".xlsx": spreadsheet_not_supported
+  ".html": html_not_supported
+  ".htm": html_not_supported
+  ".heic": heic_not_supported
+
+# Source reliability 1-5 (default 3). First matching pattern wins; pattern is a regex on the folded path.
+# Add predmet-specific lines in the app (e.g. "usmeni (dva|tri)" -> 5 for newest, most reliable notes).
+reliability: []
