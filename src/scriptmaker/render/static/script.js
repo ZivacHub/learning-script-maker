@@ -69,6 +69,12 @@
   document.addEventListener('sm:mode', SM.scanScroll);
   document.addEventListener('toggle', SM.scanScroll, true);   /* a fold-out opened */
   window.addEventListener('load', SM.scanScroll);
+  /* A formula is measured right after KaTeX drew it, but its own fonts may still be loading, and a wider font makes it
+     overflow only afterwards: look again once fonts have arrived (otherwise a wide formula stays unreachable by keyboard). */
+  if (document.fonts) {
+    if (document.fonts.ready) document.fonts.ready.then(SM.scanScroll);
+    if (document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', SM.scanScroll);
+  }
 
   function typesetOne(el) {
     if (el.classList.contains('ok') || el.classList.contains('tex-fail')) return;

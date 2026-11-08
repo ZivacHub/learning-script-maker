@@ -86,5 +86,4 @@ The generated script itself is `sample-script.html` (522 KB, one file, no intern
   word.
 - Question cleaning lowercases words written in all capitals (for example an acronym in a question); this is deliberate
   for shouted headings in real lists, but it can look wrong for acronyms.
-- One accessibility test (axe-core on a wide formula in the maths demo script) is unstable on the author's PC right now: it passed in the 2026-11-04 full run, and on 2026-11-07 it failed in three of four runs and passed once. Not investigated yet; the 1222-test figure above is the 2026-11-04 result.
-- Windows-first; single user; no accounts; the planner and notifications do not exist yet.
+- One accessibility test (axe-core on a wide formula in the maths demo script) failed on the author's PC on 2026-11-07 in three of four runs. Cause found and fixed the same day: a formula was measured before its font had loaded, so a formula that became wide afterwards was not reachable by keyboard. The script now measures again when fonts arrive; the whole render test folder passed (303 tests, 2026-11-08).
